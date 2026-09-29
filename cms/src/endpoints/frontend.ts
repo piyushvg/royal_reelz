@@ -13,7 +13,10 @@ export function mediaSrc(file: UploadValue, fallback?: string | null): string {
   return fallback || ''
 }
 
-async function docsOf(payload: Payload, collection: 'slides' | 'awards' | 'press' | 'places' | 'photos') {
+async function docsOf<T extends 'slides' | 'awards' | 'press' | 'places' | 'photos'>(
+  payload: Payload,
+  collection: T,
+) {
   const result = await payload.find({
     collection,
     depth: 1,
