@@ -1,5 +1,5 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/demosandvirp/public_html/royalreelz.demo.sandvirp.com/
+    - export DEPLOYPATH=/home2/cmsadminsandvirp/royal_reelz/
     - /bin/cp -R css images js index.html $DEPLOYPATH
