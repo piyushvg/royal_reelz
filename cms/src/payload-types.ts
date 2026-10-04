@@ -74,6 +74,8 @@ export interface Config {
     press: Press;
     places: Place;
     photos: Photo;
+    services: Service;
+    team: Team;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -88,6 +90,8 @@ export interface Config {
     press: PressSelect<false> | PressSelect<true>;
     places: PlacesSelect<false> | PlacesSelect<true>;
     photos: PhotosSelect<false> | PhotosSelect<true>;
+    services: ServicesSelect<false> | ServicesSelect<true>;
+    team: TeamSelect<false> | TeamSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -102,12 +106,14 @@ export interface Config {
     about: About;
     destinations: Destination;
     gallery: Gallery;
+    contact: Contact;
   };
   globalsSelect: {
     site: SiteSelect<false> | SiteSelect<true>;
     about: AboutSelect<false> | AboutSelect<true>;
     destinations: DestinationsSelect<false> | DestinationsSelect<true>;
     gallery: GallerySelect<false> | GallerySelect<true>;
+    contact: ContactSelect<false> | ContactSelect<true>;
   };
   locale: null;
   widgets: {
@@ -299,6 +305,54 @@ export interface Photo {
   createdAt: string;
 }
 /**
+ * Each entry becomes one tab in the Why choose us section.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services".
+ */
+export interface Service {
+  id: number;
+  /**
+   * For example: Wedding Films
+   */
+  title: string;
+  body: string;
+  /**
+   * Lower numbers appear first on the website.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Cards shown in the Creative team section on the About page.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team".
+ */
+export interface Team {
+  id: number;
+  name: string;
+  /**
+   * For example: Founder · Director
+   */
+  role: string;
+  /**
+   * Leave this empty to keep the image path below.
+   */
+  photo?: (number | null) | Media;
+  /**
+   * Path on the website, for example images/banner/01.jpg
+   */
+  photoPath?: string | null;
+  /**
+   * Lower numbers appear first on the website.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -349,6 +403,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'photos';
         value: number | Photo;
+      } | null)
+    | ({
+        relationTo: 'services';
+        value: number | Service;
+      } | null)
+    | ({
+        relationTo: 'team';
+        value: number | Team;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -503,6 +565,30 @@ export interface PhotosSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "services_select".
+ */
+export interface ServicesSelect<T extends boolean = true> {
+  title?: T;
+  body?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "team_select".
+ */
+export interface TeamSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
+  photo?: T;
+  photoPath?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -568,6 +654,25 @@ export interface Site {
   edition: string;
   scrollHint: string;
   footer: string;
+  tagline?: string | null;
+  socials?: {
+    facebook?: string | null;
+    instagram?: string | null;
+    youtube?: string | null;
+  };
+  whatsapp?: {
+    /**
+     * Country code, no + or spaces. For example 919322451778
+     */
+    number?: string | null;
+    message?: string | null;
+  };
+  footerPlaces?:
+    | {
+        name: string;
+        id?: string | null;
+      }[]
+    | null;
   nav?:
     | {
         label: string;
@@ -588,6 +693,21 @@ export interface Site {
 export interface About {
   id: number;
   title: string;
+  pageEyebrow?: string | null;
+  pageTitleGold?: string | null;
+  pageTitleRest?: string | null;
+  pageLede?: string | null;
+  storyParagraphs?:
+    | {
+        text: string;
+        id?: string | null;
+      }[]
+    | null;
+  whyTitle?: string | null;
+  whyLede?: string | null;
+  teamTitle?: string | null;
+  teamLede?: string | null;
+  teamCta?: string | null;
   paragraphs?:
     | {
         text: string;
@@ -639,6 +759,28 @@ export interface Gallery {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact".
+ */
+export interface Contact {
+  id: number;
+  eyebrow?: string | null;
+  titleGold?: string | null;
+  titleRest?: string | null;
+  lede?: string | null;
+  infoTitle?: string | null;
+  formTitle?: string | null;
+  address?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  /**
+   * Where the enquiry form posts, for example mail.php or a Formspree URL.
+   */
+  formAction?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "site_select".
  */
 export interface SiteSelect<T extends boolean = true> {
@@ -651,6 +793,26 @@ export interface SiteSelect<T extends boolean = true> {
   edition?: T;
   scrollHint?: T;
   footer?: T;
+  tagline?: T;
+  socials?:
+    | T
+    | {
+        facebook?: T;
+        instagram?: T;
+        youtube?: T;
+      };
+  whatsapp?:
+    | T
+    | {
+        number?: T;
+        message?: T;
+      };
+  footerPlaces?:
+    | T
+    | {
+        name?: T;
+        id?: T;
+      };
   nav?:
     | T
     | {
@@ -668,6 +830,21 @@ export interface SiteSelect<T extends boolean = true> {
  */
 export interface AboutSelect<T extends boolean = true> {
   title?: T;
+  pageEyebrow?: T;
+  pageTitleGold?: T;
+  pageTitleRest?: T;
+  pageLede?: T;
+  storyParagraphs?:
+    | T
+    | {
+        text?: T;
+        id?: T;
+      };
+  whyTitle?: T;
+  whyLede?: T;
+  teamTitle?: T;
+  teamLede?: T;
+  teamCta?: T;
   paragraphs?:
     | T
     | {
@@ -708,6 +885,25 @@ export interface GallerySelect<T extends boolean = true> {
   titleRest?: T;
   lede?: T;
   loadMore?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "contact_select".
+ */
+export interface ContactSelect<T extends boolean = true> {
+  eyebrow?: T;
+  titleGold?: T;
+  titleRest?: T;
+  lede?: T;
+  infoTitle?: T;
+  formTitle?: T;
+  address?: T;
+  email?: T;
+  phone?: T;
+  formAction?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

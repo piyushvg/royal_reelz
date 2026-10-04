@@ -1,7 +1,7 @@
 /* Royal Reelz — Atelier Cinema
    loader · header · cover slider · page dots · gallery reveal · tabs · lightbox */
 
-$(function () {
+function initRoyalReelz() {
 
   var isInner = $('body').hasClass('inner');
 
@@ -129,5 +129,12 @@ $(function () {
     if (e.key === 'ArrowLeft') show(cur - 1);
     if (e.key === 'ArrowRight') show(cur + 1);
   });
+}
 
+/* CMS data pehle aata hai, phir UI init hota hai.
+   cms.js na ho to turant init kar do. */
+window.RR = window.RR || {};
+window.RR.initUI = initRoyalReelz;
+$(function () {
+  if (!window.RR.cmsPending) initRoyalReelz();
 });
