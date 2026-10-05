@@ -27,6 +27,37 @@ const awards = [
 
 const press = ['WeddingSutra', 'WeddingWire', 'WedMeGood', 'Weddingz.in', 'The Economic Times']
 
+const storyParagraphs = [
+  'It all started on a coffee table where some freelance photography enthusiasts were discussing their plans. It then turned out to be a start-up and now is one of the top wedding photography companies in the town. The journey from some to a team is what makes Royal Reelz the favourite \u2018destination wedding photographers\u2019 for its esteemed clientele.',
+  'With the utmost efforts, the perfect combination of photography techniques and the aesthetics, and an unbeatable team of \u2018lights-camera-action\u2019 are the reasons behind Royal Reelz success. In a short span of 6 years, we have conducted more than 200 wedding photo-shoots and over 500 corporate projects. Every single photograph is shot with a purpose and intention and we strive to capture not just the emotions but also the very essence of the experiences and stories unfolding in front of our lenses.',
+  'We have investigated the blemish and fallibility in the current industrial behaviour and we put in our souls to make it distinct and ahead of the time. We are confident with our quality, which makes us to deliver the photographs within time, sometimes before time. Our motto, \u2018Royal moments \u2014 captured on time, and delivered on time\u2019 endorses our dedication and helps us to stand true to it every moment.',
+]
+
+const services: [string, string][] = [
+  [
+    'Wedding Films',
+    'Unlike our counterparts, we did not keep ourselves stipulated to wedding photography only. Our finest blend of cinematography and the technical capabilities of high-fashion photography help us to create the most stunning photos with a surreal and suave feel. Regardless of the conditions at the site, we always strive to be a step ahead to provide with the best photographs to our esteemed clients.',
+  ],
+  ['Research and Planning', 'Add this text in the admin panel.'],
+  ['Customizations', 'Add this text in the admin panel.'],
+  ['Prompt Service', 'Add this text in the admin panel.'],
+  ['The Variety of Our Projects', 'Add this text in the admin panel.'],
+]
+
+const team: [string, string, string][] = [
+  ['Rishab Agarwal', 'Founder \u00b7 Director', 'images/team/01.jpg'],
+  ['Taronish Bulsara', 'Team Head', 'images/team/02.jpg'],
+  ['Amit Suryawanshi', 'Photographer', 'images/team/03.jpg'],
+  ['Shantanu Suryawanshi', 'Photographer \u00b7 Editor', 'images/team/04.jpg'],
+  ['Akshay Yadav', 'Photographer', 'images/team/05.jpg'],
+  ['Prabhat Nihalani', 'Production Head', 'images/team/06.jpg'],
+  ['Vikas Barod', 'Drone Pilot', 'images/team/07.jpg'],
+  ['Kajal Agarwal', 'Content Writer', 'images/team/08.jpg'],
+  ['Naeem Mulla', 'Editor', 'images/team/09.jpg'],
+  ['Hiteshi Jain', 'Content Writer', 'images/team/10.jpg'],
+  ['Sana Shaikh', 'Editor', 'images/team/11.jpg'],
+]
+
 const international = [
   ['images/dest/icon-emirates.png', 'Emirates Palace', 'Abu Dhabi'],
   ['images/dest/icon-almaty.png', 'Almaty', 'Kazakhstan'],
@@ -114,13 +145,31 @@ export async function seedIfEmpty(payload: Payload) {
       logoInkPath: 'images/logo-ink.png',
       edition: '2026 Edition',
       scrollHint: 'Discover',
-      footer: 'Royal Reelz · 2026 Edition',
+      footer: '\u00a9 MMXXVI Royal Reelz. All rights reserved.',
+      tagline: 'Atelier \u00b7 Cinema',
+      credit: {
+        text: 'Designed and Powered by',
+        name: 'Sandvirp Solutions',
+        url: 'https://sandvirp.com',
+      },
       nav: [
-        { label: 'Cover', href: '#cover' },
-        { label: 'About', href: '#about' },
-        { label: 'Destinations', href: '#destinations' },
-        { label: 'Gallery', href: '#gallery' },
+        { label: 'Home', href: 'index.html' },
+        { label: 'About', href: 'about.html' },
+        { label: 'Destinations', href: 'index.html#destinations' },
+        { label: 'Gallery', href: 'gallery.html' },
+        { label: 'Videos', href: 'videos.html' },
+        { label: 'Contact', href: 'contact.html' },
       ],
+      socials: {
+        facebook: 'https://www.facebook.com/RoyalReelz/',
+        instagram: 'https://www.instagram.com/royalreelz',
+        youtube: 'https://www.youtube.com/@royalreelz',
+      },
+      whatsapp: {
+        number: '919322451778',
+        message: "Hi Royal Reelz, I'd like to enquire about wedding photography.",
+      },
+      footerPlaces: ['Udaipur', 'Goa', 'Dubai', 'Bali', 'Maldives'].map((name) => ({ name })),
     },
   })
 
@@ -132,6 +181,17 @@ export async function seedIfEmpty(payload: Payload) {
       awardsTitle: 'Awards',
       featuredLabel: 'Featured',
       featuredIn: 'in',
+      pageEyebrow: 'Royal Reelz',
+      pageTitleGold: 'About',
+      pageTitleRest: 'Royal Reelz',
+      pageLede: 'It all started on a coffee table. It turned into a start-up, and then into a team.',
+      storyParagraphs: storyParagraphs.map((text) => ({ text })),
+      whyTitle: 'Why choose us?',
+      whyLede:
+        'In the current times, we are the most sought-after luxury wedding photographers in the industry. We have established this image by our unique service catalogue that includes but is not limited to:',
+      teamTitle: 'Creative team',
+      teamLede: 'The people behind every frame.',
+      teamCta: 'Join our team',
     },
   })
 
@@ -156,6 +216,23 @@ export async function seedIfEmpty(payload: Payload) {
       titleRest: 'Gallery',
       lede: 'A glimpse of celebrations we’ve had the honour to capture.',
       loadMore: 'Load More',
+    },
+  })
+
+  await payload.updateGlobal({
+    slug: 'contact',
+    data: {
+      eyebrow: 'Royal Reelz',
+      titleGold: 'Get in',
+      titleRest: 'Touch',
+      lede: 'Tell us about your celebration \u2014 we\u2019ll come back to you within a day.',
+      infoTitle: 'Contact us',
+      formTitle: 'Get in touch',
+      address:
+        '162/2D, Adarsh Colony, Near: Milind Bakery, Road no. 6, Tingrenagar, Vishrantwadi, Pune \u2013 411015, Maharashtra',
+      email: 'info@royalreelz.com',
+      phone: '+91 93224 51778',
+      formAction: 'mail.php',
     },
   })
 
@@ -210,6 +287,31 @@ export async function seedIfEmpty(payload: Payload) {
     await payload.create({
       collection: 'photos',
       data: { imagePath: photos[i][0], alt: photos[i][1], order: i + 1 },
+    })
+  }
+
+  for (let i = 0; i < services.length; i++) {
+    await payload.create({
+      collection: 'services',
+      data: { title: services[i][0], body: services[i][1], order: i + 1 },
+    })
+  }
+
+  const videos: [string, string][] = [
+    ['Wedding Trailer', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+  ]
+
+  for (let i = 0; i < videos.length; i++) {
+    await payload.create({
+      collection: 'videos',
+      data: { title: videos[i][0], youtubeUrl: videos[i][1], order: i + 1 },
+    })
+  }
+
+  for (let i = 0; i < team.length; i++) {
+    await payload.create({
+      collection: 'team',
+      data: { name: team[i][0], role: team[i][1], photoPath: team[i][2], order: i + 1 },
     })
   }
 
