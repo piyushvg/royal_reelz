@@ -1,5 +1,6 @@
 ---
 deployment:
   tasks:
-    - export DEPLOYPATH=/home2/cmsadminsandvirp/royal_reelz/
-    - /bin/cp -R css images js index.html $DEPLOYPATH
+    - export DEPLOYPATH=/home2/demosandvirp/repositories/royal_reelz/cms
+    - /bin/mkdir -p $DEPLOYPATH/tmp
+    - /bin/touch $DEPLOYPATH/tmp/restart.txt
