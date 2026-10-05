@@ -14,6 +14,7 @@ import { Services } from './collections/Services'
 import { Slides } from './collections/Slides'
 import { Team } from './collections/Team'
 import { Users } from './collections/Users'
+import { Videos } from './collections/Videos'
 import { frontendEndpoint } from './endpoints/frontend'
 import { About } from './globals/About'
 import { Contact } from './globals/Contact'
@@ -35,30 +36,30 @@ export default buildConfig({
       titleSuffix: '— Royal Reelz',
     },
   },
-  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team],
+  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos],
   globals: [Site, About, Destinations, Gallery, Contact],
   endpoints: [frontendEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
- cors: [
-  'http://localhost:3000',
-  'http://localhost',
-  'http://127.0.0.1',
-  'http://localhost:80',
-  'http://127.0.0.1:80',
+  cors: [
+    'http://localhost:3000',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://localhost:80',
+    'http://127.0.0.1:80',
 
-  // Royal Reelz local frontend
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-],
+    // Royal Reelz local frontend
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+  ],
   csrf: [
-  'http://localhost:3000',
-  'http://localhost',
-  'http://127.0.0.1',
-  'http://127.0.0.1:5500',
-  'http://localhost:5500',
-],
+    'http://localhost:3000',
+    'http://localhost',
+    'http://127.0.0.1',
+    'http://127.0.0.1:5500',
+    'http://localhost:5500',
+  ],
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
   },

@@ -147,11 +147,17 @@ export async function seedIfEmpty(payload: Payload) {
       scrollHint: 'Discover',
       footer: '\u00a9 MMXXVI Royal Reelz. All rights reserved.',
       tagline: 'Atelier \u00b7 Cinema',
+      credit: {
+        text: 'Designed and Powered by',
+        name: 'Sandvirp Solutions',
+        url: 'https://sandvirp.com',
+      },
       nav: [
         { label: 'Home', href: 'index.html' },
         { label: 'About', href: 'about.html' },
         { label: 'Destinations', href: 'index.html#destinations' },
         { label: 'Gallery', href: 'gallery.html' },
+        { label: 'Videos', href: 'videos.html' },
         { label: 'Contact', href: 'contact.html' },
       ],
       socials: {
@@ -288,6 +294,17 @@ export async function seedIfEmpty(payload: Payload) {
     await payload.create({
       collection: 'services',
       data: { title: services[i][0], body: services[i][1], order: i + 1 },
+    })
+  }
+
+  const videos: [string, string][] = [
+    ['Wedding Trailer', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ'],
+  ]
+
+  for (let i = 0; i < videos.length; i++) {
+    await payload.create({
+      collection: 'videos',
+      data: { title: videos[i][0], youtubeUrl: videos[i][1], order: i + 1 },
     })
   }
 

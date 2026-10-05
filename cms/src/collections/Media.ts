@@ -4,9 +4,6 @@ import { isLoggedIn, publicRead } from '../access'
 
 export const Media: CollectionConfig = {
   slug: 'media',
-  admin: {
-    group: 'Settings',
-  },
   access: {
     read: publicRead,
     create: isLoggedIn,
@@ -20,8 +17,16 @@ export const Media: CollectionConfig = {
       required: true,
     },
   ],
+  admin: {
+    group: 'Settings',
+    useAsTitle: 'alt',
+  },
   upload: {
     staticDir: 'media',
     mimeTypes: ['image/*'],
+    displayPreview: true,
+    imageSizes: [
+      { name: 'thumbnail', width: 320, height: 320, position: 'centre' },
+    ],
   },
 }

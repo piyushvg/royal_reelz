@@ -8,7 +8,7 @@ export const Photos: CollectionConfig = {
   labels: { singular: 'Gallery photo', plural: 'Gallery photos' },
   admin: {
     useAsTitle: 'alt',
-    defaultColumns: ['alt', 'order', 'updatedAt'],
+    defaultColumns: ['image', 'alt', 'order'],
     group: 'Gallery',
   },
   access: {

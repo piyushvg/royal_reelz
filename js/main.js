@@ -6,10 +6,23 @@ function initRoyalReelz() {
   var isInner = $('body').hasClass('inner');
 
   /* ---------- loader ---------- */
-  $(window).on('load', function () {
-    setTimeout(function () { $('.loader').addClass('hide'); }, 450);
+  setTimeout(function () { $('.loader').addClass('hide'); }, 250);
+  $(window).on('load', function () { $('.loader').addClass('hide'); });
+
+  // page change par loader wapas
+  $(document).on('click', 'a[href]', function (e) {
+    var href = $(this).attr('href') || '';
+    if (e.which > 1 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    if ($(this).attr('target') === '_blank') return;
+    if (/^(#|mailto:|tel:|https?:)/i.test(href)) return;
+    if (!/\.html(\?|#|$)/i.test(href)) return;
+    $('.loader').removeClass('hide').addClass('is-leaving');
   });
-  setTimeout(function () { $('.loader').addClass('hide'); }, 4000); // safety net
+  $(window).on('pageshow', function (ev) {
+    if (ev.originalEvent && ev.originalEvent.persisted) {
+      $('.loader').removeClass('is-leaving').addClass('hide');
+    }
+  });
 
   /* ---------- mobile nav ---------- */
   var $header = $('.site-header');
@@ -87,11 +100,14 @@ function initRoyalReelz() {
   }
 
   /* ---------- why-choose-us tabs ---------- */
-  $('.tab-btn').on('click', function () {
-    var key = $(this).data('tab');
-    $('.tab-btn').removeClass('is-on');
+  $(document).off('click.rrtabs').on('click.rrtabs', '.tab-btn', function () {
+    var key = String($(this).attr('data-tab'));
+    var $bar = $(this).closest('.tabs');
+    if (!$bar.length) $bar = $(document);
+    $bar.find('.tab-btn').removeClass('is-on');
     $(this).addClass('is-on');
-    $('.tab-panel').removeClass('is-on').filter('[data-panel="' + key + '"]').addClass('is-on');
+    $bar.find('.tab-panel').removeClass('is-on')
+      .filter('[data-panel="' + key + '"]').addClass('is-on');
   });
 
   /* ---------- lightbox ---------- */
@@ -122,6 +138,8 @@ function initRoyalReelz() {
   $('.lightbox-prev').on('click', function () { show(cur - 1); });
   $('.lightbox-next').on('click', function () { show(cur + 1); });
   $box.on('click', function (e) { if (e.target === this) close(); });
+
+  if (window.RR && typeof window.RR.initVideos === 'function') window.RR.initVideos();
 
   $(document).on('keydown', function (e) {
     if ($box.prop('hidden')) return;

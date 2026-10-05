@@ -9,6 +9,9 @@ export function uploadOrPath(name: string, label: string, pathName?: string): Fi
       relationTo: 'media',
       admin: {
         description: 'Leave this empty to keep the image path below.',
+        components: {
+          Cell: '/components/ImagePreviewCell#ImagePreviewCell',
+        },
       },
     },
     {

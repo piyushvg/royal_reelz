@@ -18,6 +18,16 @@ export const Site: GlobalConfig = {
     { name: 'footer', label: 'Footer copyright line', type: 'text', required: true },
     { name: 'tagline', label: 'Logo tagline', type: 'text' },
     {
+      name: 'credit',
+      label: 'Footer credit',
+      type: 'group',
+      fields: [
+        { name: 'text', type: 'text', admin: { description: 'Jaise: Designed and Powered by' } },
+        { name: 'name', type: 'text' },
+        { name: 'url', type: 'text' },
+      ],
+    },
+    {
       name: 'socials',
       label: 'Social links',
       type: 'group',

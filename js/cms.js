@@ -119,6 +119,14 @@
     }
     text('.foot-base', site.footer);
 
+    var credit = site.credit || {};
+    var creditEl = $('.foot-credit');
+    if (creditEl && credit.name) {
+      creditEl.innerHTML = esc(credit.text || 'Designed and Powered by') + ' ' +
+        '<a href="' + esc(credit.url || '#') + '" target="_blank" rel="noopener">' +
+        esc(credit.name) + '</a>';
+    }
+
     // WhatsApp
     var wa = site.whatsapp || {};
     var waEl = $('.wa-float');
@@ -304,6 +312,25 @@
     }
   }
 
+  /* -------------------------------------------------- videos page */
+  function renderVideosPage(d) {
+    var grid = $('.video-grid');
+    if (!grid) return;
+    if (!(d.videos || []).length) return;
+
+    grid.innerHTML = list(d.videos, function (v) {
+      var id = (window.RR && window.RR.videoId) ? window.RR.videoId(v.url) : '';
+      if (!id) return '';
+      return '<article class="video-card">' +
+        '<div class="video-frame" data-yt="' + esc(id) + '"></div>' +
+        (v.caption ? '<p class="video-cap">' + esc(v.caption) + '</p>' : '') +
+        '<div class="video-meta">' +
+        '<h2 class="video-title">' + esc(v.title) + '</h2>' +
+        '<button class="video-sound" type="button">Sound on</button>' +
+        '</div></article>';
+    });
+  }
+
   /* ------------------------------------------------- contact page */
   function renderContactPage(d) {
     var frame = $('.contact-frame');
@@ -354,6 +381,7 @@
         renderHome(d);
         renderGalleryPage(d);
         renderAboutPage(d);
+        renderVideosPage(d);
         renderContactPage(d);
       })
       .catch(function (err) {

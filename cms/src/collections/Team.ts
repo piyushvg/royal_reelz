@@ -8,7 +8,7 @@ export const Team: CollectionConfig = {
   labels: { singular: 'Team member', plural: 'Creative team' },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'role', 'order'],
+    defaultColumns: ['photo', 'name', 'role', 'order'],
     group: 'About',
     description: 'Cards shown in the Creative team section on the About page.',
   },

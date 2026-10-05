@@ -31,10 +31,9 @@ export function mediaSrc(file: UploadValue, fallback?: string | null): string {
   return ''
 }
 
-async function docsOf<T extends 'slides' | 'awards' | 'press' | 'places' | 'photos' | 'services' | 'team'>(
-  payload: Payload,
-  collection: T,
-) {
+async function docsOf<
+  T extends 'slides' | 'awards' | 'press' | 'places' | 'photos' | 'services' | 'team' | 'videos',
+>(payload: Payload, collection: T) {
   const result = await payload.find({
     collection,
     depth: 1,
@@ -50,8 +49,21 @@ export const frontendEndpoint: Endpoint = {
   method: 'get',
   handler: async (req) => {
     const payload = req.payload
-    const [site, about, destinations, gallery, contact, slides, awards, press, places, photos, services, team] =
-      await Promise.all([
+    const [
+      site,
+      about,
+      destinations,
+      gallery,
+      contact,
+      slides,
+      awards,
+      press,
+      places,
+      photos,
+      services,
+      team,
+      videos,
+    ] = await Promise.all([
       payload.findGlobal({ slug: 'site', depth: 1, overrideAccess: true }),
       payload.findGlobal({ slug: 'about', depth: 0, overrideAccess: true }),
       payload.findGlobal({ slug: 'destinations', depth: 1, overrideAccess: true }),
@@ -64,6 +76,7 @@ export const frontendEndpoint: Endpoint = {
       docsOf(payload, 'photos'),
       docsOf(payload, 'services'),
       docsOf(payload, 'team'),
+      docsOf(payload, 'videos'),
     ])
 
     const mapPlace = (place: (typeof places)[number]) => ({
@@ -84,6 +97,11 @@ export const frontendEndpoint: Endpoint = {
         footer: site.footer,
         nav: (site.nav || []).map((item) => ({ label: item.label, href: item.href })),
         tagline: site.tagline || '',
+        credit: {
+          text: site.credit?.text || '',
+          name: site.credit?.name || '',
+          url: site.credit?.url || '',
+        },
         socials: {
           facebook: site.socials?.facebook || '',
           instagram: site.socials?.instagram || '',
@@ -152,6 +170,11 @@ export const frontendEndpoint: Endpoint = {
           alt: photo.alt,
         }))
         .filter((photo) => photo.src),
+      videos: videos.map((video) => ({
+        title: video.title,
+        url: video.youtubeUrl,
+        caption: video.caption || '',
+      })),
       services: services.map((service) => ({ title: service.title, body: service.body })),
       team: team.map((member) => ({
         name: member.name,

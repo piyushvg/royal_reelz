@@ -76,6 +76,7 @@ export interface Config {
     photos: Photo;
     services: Service;
     team: Team;
+    videos: Video;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -92,6 +93,7 @@ export interface Config {
     photos: PhotosSelect<false> | PhotosSelect<true>;
     services: ServicesSelect<false> | ServicesSelect<true>;
     team: TeamSelect<false> | TeamSelect<true>;
+    videos: VideosSelect<false> | VideosSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -187,6 +189,16 @@ export interface Media {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
 }
 /**
  * Photos in the opening banner. Order controls the slideshow.
@@ -266,9 +278,12 @@ export interface Place {
    */
   iconPath?: string | null;
   /**
-   * Shown under the name on international cards.
+   * Name ke neeche chhoti line, jaise country ka naam. Khaali bhi chhod sakte ho.
    */
   location?: string | null;
+  /**
+   * Venue / hotel list. Khaali chhodoge to sirf sub line dikhegi.
+   */
   venues?:
     | {
         name: string;
@@ -353,6 +368,27 @@ export interface Team {
   createdAt: string;
 }
 /**
+ * YouTube link paste karo. Page par video apne aap play hoti hai jab scroll me aati hai.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos".
+ */
+export interface Video {
+  id: number;
+  title: string;
+  /**
+   * Koi bhi YouTube link chalega: youtube.com/watch?v=..., youtu.be/..., ya /shorts/...
+   */
+  youtubeUrl: string;
+  caption?: string | null;
+  /**
+   * Lower numbers appear first on the website.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -411,6 +447,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'team';
         value: number | Team;
+      } | null)
+    | ({
+        relationTo: 'videos';
+        value: number | Video;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -494,6 +534,20 @@ export interface MediaSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -589,6 +643,18 @@ export interface TeamSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "videos_select".
+ */
+export interface VideosSelect<T extends boolean = true> {
+  title?: T;
+  youtubeUrl?: T;
+  caption?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -655,6 +721,14 @@ export interface Site {
   scrollHint: string;
   footer: string;
   tagline?: string | null;
+  credit?: {
+    /**
+     * Jaise: Designed and Powered by
+     */
+    text?: string | null;
+    name?: string | null;
+    url?: string | null;
+  };
   socials?: {
     facebook?: string | null;
     instagram?: string | null;
@@ -794,6 +868,13 @@ export interface SiteSelect<T extends boolean = true> {
   scrollHint?: T;
   footer?: T;
   tagline?: T;
+  credit?:
+    | T
+    | {
+        text?: T;
+        name?: T;
+        url?: T;
+      };
   socials?:
     | T
     | {
