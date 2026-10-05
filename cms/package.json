@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "cross-env NODE_OPTIONS=--no-deprecation next dev --port 3000",
-    "build": "cross-env NODE_OPTIONS=--no-deprecation next build",
+    "build": "cross-env NODE_OPTIONS=--no-deprecation next build --webpack",
     "start": "cross-env NODE_OPTIONS=--no-deprecation next start --port 3000",
     "generate:importmap": "cross-env NODE_OPTIONS=--no-deprecation payload generate:importmap",
     "generate:types": "cross-env NODE_OPTIONS=--no-deprecation payload generate:types",
