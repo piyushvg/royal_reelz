@@ -1,195 +1,158 @@
-$(function () {
-  function hideLoader() {
-    $(".loader").addClass("hide");
+/* Royal Reelz — Atelier Cinema
+   loader · header · cover slider · page dots · gallery reveal · tabs · lightbox */
+
+function initRoyalReelz() {
+
+  var isInner = $('body').hasClass('inner');
+
+  /* ---------- loader ---------- */
+  setTimeout(function () { $('.loader').addClass('hide'); }, 250);
+  $(window).on('load', function () { $('.loader').addClass('hide'); });
+
+  // page change par loader wapas
+  $(document).on('click', 'a[href]', function (e) {
+    var href = $(this).attr('href') || '';
+    if (e.which > 1 || e.metaKey || e.ctrlKey || e.shiftKey) return;
+    if ($(this).attr('target') === '_blank') return;
+    if (/^(#|mailto:|tel:|https?:)/i.test(href)) return;
+    if (!/\.html(\?|#|$)/i.test(href)) return;
+    $('.loader').removeClass('hide').addClass('is-leaving');
+  });
+  $(window).on('pageshow', function (ev) {
+    if (ev.originalEvent && ev.originalEvent.persisted) {
+      $('.loader').removeClass('is-leaving').addClass('hide');
+    }
+  });
+
+  /* ---------- mobile nav ---------- */
+  var $header = $('.site-header');
+  $('.nav-toggle').on('click', function () {
+    var open = $header.toggleClass('is-open').hasClass('is-open');
+    $(this).attr('aria-expanded', open);
+  });
+  $('.site-nav .nav-link').on('click', function () {
+    $header.removeClass('is-open').find('.nav-toggle').attr('aria-expanded', false);
+  });
+
+  /* ---------- header tone + active section (home only) ---------- */
+  if (!isInner) {
+    var $sections = $('#cover, #about, #destinations, #gallery');
+
+    function onScroll() {
+      var y = $(window).scrollTop();
+      var heroEnd = $('#cover').outerHeight() - 90;
+      $header.toggleClass('is-light', y > heroEnd);
+
+      var current = 'cover';
+      $sections.each(function () {
+        if ($(this).offset().top - 140 <= y) current = this.id;
+      });
+      $('.page-dots .dot').removeClass('is-on')
+        .filter('[href="#' + current + '"]').addClass('is-on');
+      $('.site-nav .nav-link[href^="#"]').removeClass('is-current')
+        .filter('[href="#' + current + '"]').addClass('is-current');
+    }
+    $(window).on('scroll resize', onScroll);
+    onScroll();
   }
 
-  if (/noloader/.test(window.location.search)) {
-    hideLoader();
-    $("html").css("scroll-behavior", "auto");
-  } else {
-    $(window).on("load", function () {
-      setTimeout(hideLoader, 650);
+  /* ---------- cover slider ---------- */
+  var $slides = $('.hero-slide');
+  if ($slides.length) {
+    var $dots = $('.hero-dots');
+    var at = 0;
+    var timer;
+
+    $slides.each(function (i) {
+      $('<button type="button" aria-label="Photo ' + (i + 1) + '"></button>')
+        .toggleClass('is-on', i === 0)
+        .appendTo($dots);
     });
-    setTimeout(hideLoader, 2000);
+
+    function go(i) {
+      at = (i + $slides.length) % $slides.length;
+      $slides.removeClass('is-on').eq(at).addClass('is-on');
+      $dots.children().removeClass('is-on').eq(at).addClass('is-on');
+    }
+    function play() { timer = setInterval(function () { go(at + 1); }, 5000); }
+    function stop() { clearInterval(timer); }
+
+    $dots.on('click', 'button', function () { stop(); go($(this).index()); play(); });
+    play();
   }
 
-  var $header = $(".site-header");
-  var $toggle = $(".nav-toggle");
-
-  function closeMenu() {
-    $header.removeClass("is-open");
-    $toggle.attr({ "aria-expanded": "false", "aria-label": "Open menu" });
-  }
-
-  $toggle.on("click", function () {
-    var open = !$header.hasClass("is-open");
-    $header.toggleClass("is-open", open);
-    $toggle.attr({
-      "aria-expanded": open ? "true" : "false",
-      "aria-label": open ? "Close menu" : "Open menu"
-    });
-  });
-
-  function goTo(href) {
-    var $target = $(href);
-    if (!$target.length) return;
-    var top = href === "#cover" ? 0 : $target.offset().top;
-    $("html, body").stop(true).animate({ scrollTop: top }, 700);
-  }
-
-  $(document).on("click", ".nav-link, .brand, .scroll-hint, .page-dots .dot", function (e) {
-    var href = $(this).attr("href");
-    if (!href || href.charAt(0) !== "#") return;
-    e.preventDefault();
-    closeMenu();
-    goTo(href);
-  });
-
-  var $links = $(".nav-link");
-  var sections = ["#cover", "#about", "#destinations", "#gallery"];
-
-  function setCurrent() {
-    var y = $(window).scrollTop();
-    var aboutTop = $("#about").offset() ? $("#about").offset().top : $(window).height();
-    $header.toggleClass("is-light", y > aboutTop - 80);
-    var mark = y + 120;
-    var current = "#cover";
-    sections.forEach(function (id) {
-      var $el = $(id);
-      if ($el.length && $el.offset().top <= mark) current = id;
-    });
-    $links.removeClass("is-current");
-    $links.filter('[href="' + current + '"]').addClass("is-current");
-    $(".page-dots .dot").removeClass("is-on");
-    $(".page-dots .dot").filter('[href="' + current + '"]').addClass("is-on");
-  }
-
-  if (window.location.hash && $(window.location.hash).length) {
-    $(window).scrollTop($(window.location.hash).offset().top);
-  }
-
-  $(window).on("scroll", setCurrent);
-  $(window).on("resize", function () {
-    if ($(window).width() > 900) closeMenu();
-  });
-  setCurrent();
-
-  var $slides = $(".hero-slide");
-  var $dots = $(".hero-dots");
-  var slide = 0;
-  var timer;
-
-  $slides.each(function (i) {
-    $dots.append(
-      $("<button type='button' aria-label='Photo " + (i + 1) + "'></button>").toggleClass("is-on", i === 0)
-    );
-  });
-
-  function showSlide(n) {
-    slide = (n + $slides.length) % $slides.length;
-    $slides.removeClass("is-on").eq(slide).addClass("is-on");
-    $dots.children().removeClass("is-on").eq(slide).addClass("is-on");
-  }
-
-  function startBanner() {
-    clearInterval(timer);
-    timer = setInterval(function () {
-      showSlide(slide + 1);
-    }, 3000);
-  }
-
-  $dots.on("click", "button", function () {
-    showSlide($(this).index());
-    startBanner();
-  });
-
-  $(".hero-frame").on("mouseenter", function () {
-    clearInterval(timer);
-  }).on("mouseleave", startBanner);
-
-  if ($slides.length) startBanner();
-
-  var $box = $(".lightbox");
-  var $boxImg = $box.find("img");
-  var $items = $(".gallery-item");
-  var gIndex = 0;
-
-  function openGallery(i) {
-    gIndex = i;
-    $boxImg.attr("src", $items.eq(gIndex).attr("href"));
-    $box.removeAttr("hidden");
-  }
-
-  $items.on("click", function (e) {
-    e.preventDefault();
-    openGallery($items.index(this));
-  });
-
-  $box.find(".lightbox-close").on("click", function () {
-    $box.attr("hidden", true);
-    $boxImg.attr("src", "");
-  });
-
-  $box.find(".lightbox-prev").on("click", function () {
-    openGallery((gIndex - 1 + $items.length) % $items.length);
-  });
-
-  $box.find(".lightbox-next").on("click", function () {
-    openGallery((gIndex + 1) % $items.length);
-  });
-
-  $(document).on("keydown", function (e) {
-    if ($box.is("[hidden]")) return;
-    if (e.key === "Escape") $box.find(".lightbox-close").click();
-    if (e.key === "ArrowLeft") $box.find(".lightbox-prev").click();
-    if (e.key === "ArrowRight") $box.find(".lightbox-next").click();
-  });
-});
-$(function () {
+  /* ---------- gallery reveal ---------- */
   var $items = $('.gallery-grid .gallery-item');
-  var INITIAL = 5;   // pehli baar kitni dikhengi
-  var STEP    = 10;  // har click par kitni aur
-  var shown   = INITIAL;
-
-  if (!$items.length) return;
-
-  var io = ('IntersectionObserver' in window)
-    ? new IntersectionObserver(function (entries) {
+  if ($items.length) {
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(function (entries) {
         entries.forEach(function (e) {
           if (e.isIntersecting) {
             e.target.classList.add('is-in');
             io.unobserve(e.target);
           }
         });
-      }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' })
-    : null;
-
-  function paint() {
-    $items.each(function (i) {
-      var $el = $(this);
-      if (i < shown) {
-        $el.removeClass('is-hidden');
-        if (io) io.observe(this);
-        else $el.addClass('is-in');
-      } else {
-        $el.addClass('is-hidden');
-      }
-    });
-    if (shown >= $items.length) $('.btn-more').addClass('is-done');
+      }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
+      $items.each(function () { io.observe(this); });
+    } else {
+      $items.addClass('is-in');
+    }
   }
 
-  paint();
-
-  $('.btn-more').on('click', function () {
-    var first = shown;
-    shown = Math.min(shown + STEP, $items.length);
-    paint();
-    // naye batch ki pehli image tak halka sa scroll
-    var $target = $items.eq(first);
-    if ($target.length) {
-      $('html, body').animate({
-        scrollTop: $target.offset().top - 160
-      }, 700, 'swing');
-    }
+  /* ---------- why-choose-us tabs ---------- */
+  $(document).off('click.rrtabs').on('click.rrtabs', '.tab-btn', function () {
+    var key = String($(this).attr('data-tab'));
+    var $bar = $(this).closest('.tabs');
+    if (!$bar.length) $bar = $(document);
+    $bar.find('.tab-btn').removeClass('is-on');
+    $(this).addClass('is-on');
+    $bar.find('.tab-panel').removeClass('is-on')
+      .filter('[data-panel="' + key + '"]').addClass('is-on');
   });
+
+  /* ---------- lightbox ---------- */
+  var $box  = $('.lightbox');
+  var $boxI = $box.find('img');
+  var list  = [];
+  var cur   = 0;
+
+  function show(i) {
+    cur = (i + list.length) % list.length;
+    $boxI.attr('src', list[cur]);
+  }
+  function close() {
+    $box.prop('hidden', true);
+    $boxI.attr('src', '');
+    $('body').css('overflow', '');
+  }
+
+  $('.gallery-grid').on('click', '.gallery-item', function (e) {
+    e.preventDefault();
+    list = $items.map(function () { return $(this).attr('href'); }).get();
+    show($items.index(this));
+    $box.prop('hidden', false);
+    $('body').css('overflow', 'hidden');
+  });
+
+  $('.lightbox-close').on('click', close);
+  $('.lightbox-prev').on('click', function () { show(cur - 1); });
+  $('.lightbox-next').on('click', function () { show(cur + 1); });
+  $box.on('click', function (e) { if (e.target === this) close(); });
+
+  if (window.RR && typeof window.RR.initVideos === 'function') window.RR.initVideos();
+
+  $(document).on('keydown', function (e) {
+    if ($box.prop('hidden')) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') show(cur - 1);
+    if (e.key === 'ArrowRight') show(cur + 1);
+  });
+}
+
+/* CMS data pehle aata hai, phir UI init hota hai.
+   cms.js na ho to turant init kar do. */
+window.RR = window.RR || {};
+window.RR.initUI = initRoyalReelz;
+$(function () {
+  if (!window.RR.cmsPending) initRoyalReelz();
 });

@@ -8,15 +8,32 @@ function serverURL() {
 
 export function mediaSrc(file: UploadValue, fallback?: string | null): string {
   if (file && typeof file === 'object' && file.url) {
-    return file.url.startsWith('http') ? file.url : `${serverURL()}${file.url}`
+    let url = file.url
+
+    // Agar accidentally Markdown link aa gaya ho:
+    const markdownMatch = url.match(/^\[.*\]\((.*)\)$/)
+    if (markdownMatch) {
+      url = markdownMatch[1]
+    }
+
+    return url.startsWith('http') ? url : `${serverURL()}${url}`
   }
-  return fallback || ''
+
+  if (fallback) {
+    const markdownMatch = fallback.match(/^\[.*\]\((.*)\)$/)
+    if (markdownMatch) {
+      fallback = markdownMatch[1]
+    }
+
+    return fallback.startsWith('http') ? fallback : `${serverURL()}${fallback}`
+  }
+
+  return ''
 }
 
-async function docsOf<T extends 'slides' | 'awards' | 'press' | 'places' | 'photos'>(
-  payload: Payload,
-  collection: T,
-) {
+async function docsOf<
+  T extends 'slides' | 'awards' | 'press' | 'places' | 'photos' | 'services' | 'team' | 'videos',
+>(payload: Payload, collection: T) {
   const result = await payload.find({
     collection,
     depth: 1,
@@ -32,16 +49,34 @@ export const frontendEndpoint: Endpoint = {
   method: 'get',
   handler: async (req) => {
     const payload = req.payload
-    const [site, about, destinations, gallery, slides, awards, press, places, photos] = await Promise.all([
+    const [
+      site,
+      about,
+      destinations,
+      gallery,
+      contact,
+      slides,
+      awards,
+      press,
+      places,
+      photos,
+      services,
+      team,
+      videos,
+    ] = await Promise.all([
       payload.findGlobal({ slug: 'site', depth: 1, overrideAccess: true }),
       payload.findGlobal({ slug: 'about', depth: 0, overrideAccess: true }),
       payload.findGlobal({ slug: 'destinations', depth: 1, overrideAccess: true }),
       payload.findGlobal({ slug: 'gallery', depth: 0, overrideAccess: true }),
+      payload.findGlobal({ slug: 'contact', depth: 0, overrideAccess: true }),
       docsOf(payload, 'slides'),
       docsOf(payload, 'awards'),
       docsOf(payload, 'press'),
       docsOf(payload, 'places'),
       docsOf(payload, 'photos'),
+      docsOf(payload, 'services'),
+      docsOf(payload, 'team'),
+      docsOf(payload, 'videos'),
     ])
 
     const mapPlace = (place: (typeof places)[number]) => ({
@@ -61,6 +96,22 @@ export const frontendEndpoint: Endpoint = {
         scrollHint: site.scrollHint,
         footer: site.footer,
         nav: (site.nav || []).map((item) => ({ label: item.label, href: item.href })),
+        tagline: site.tagline || '',
+        credit: {
+          text: site.credit?.text || '',
+          name: site.credit?.name || '',
+          url: site.credit?.url || '',
+        },
+        socials: {
+          facebook: site.socials?.facebook || '',
+          instagram: site.socials?.instagram || '',
+          youtube: site.socials?.youtube || '',
+        },
+        whatsapp: {
+          number: site.whatsapp?.number || '',
+          message: site.whatsapp?.message || '',
+        },
+        footerPlaces: (site.footerPlaces || []).map((place) => place.name).filter(Boolean),
       },
       slides: slides
         .map((slide) => ({
@@ -74,6 +125,16 @@ export const frontendEndpoint: Endpoint = {
         awardsTitle: about.awardsTitle,
         featuredLabel: about.featuredLabel,
         featuredIn: about.featuredIn,
+        pageEyebrow: about.pageEyebrow || '',
+        pageTitleGold: about.pageTitleGold || '',
+        pageTitleRest: about.pageTitleRest || '',
+        pageLede: about.pageLede || '',
+        storyParagraphs: (about.storyParagraphs || []).map((p) => p.text).filter(Boolean),
+        whyTitle: about.whyTitle || '',
+        whyLede: about.whyLede || '',
+        teamTitle: about.teamTitle || '',
+        teamLede: about.teamLede || '',
+        teamCta: about.teamCta || '',
       },
       awards: awards.map((award) => ({
         line1: award.line1,
@@ -109,6 +170,29 @@ export const frontendEndpoint: Endpoint = {
           alt: photo.alt,
         }))
         .filter((photo) => photo.src),
+      videos: videos.map((video) => ({
+        title: video.title,
+        url: video.youtubeUrl,
+        caption: video.caption || '',
+      })),
+      services: services.map((service) => ({ title: service.title, body: service.body })),
+      team: team.map((member) => ({
+        name: member.name,
+        role: member.role,
+        photo: mediaSrc(member.photo, member.photoPath),
+      })),
+      contact: {
+        eyebrow: contact.eyebrow || '',
+        titleGold: contact.titleGold || '',
+        titleRest: contact.titleRest || '',
+        lede: contact.lede || '',
+        infoTitle: contact.infoTitle || '',
+        formTitle: contact.formTitle || '',
+        address: contact.address || '',
+        email: contact.email || '',
+        phone: contact.phone || '',
+        formAction: contact.formAction || '',
+      },
     }
 
     return Response.json(body, {
