@@ -21,8 +21,10 @@ export const Contact: GlobalConfig = {
       name: 'formAction',
       label: 'Form action URL',
       type: 'text',
+      defaultValue: '/api/enquiry',
       admin: {
-        description: 'Where the enquiry form posts, for example mail.php or a Formspree URL.',
+        description:
+          'Contact form yahan post hoti hai. Submissions Contact enquiries list mein dikhti hain. Default: /api/enquiry',
       },
     },
   ],

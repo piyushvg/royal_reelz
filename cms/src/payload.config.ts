@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { Awards } from './collections/Awards'
+import { Enquiries } from './collections/Enquiries'
 import { Media } from './collections/Media'
 import { Photos } from './collections/Photos'
 import { Places } from './collections/Places'
@@ -15,6 +16,7 @@ import { Slides } from './collections/Slides'
 import { Team } from './collections/Team'
 import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
+import { enquiryEndpoint } from './endpoints/enquiry'
 import { frontendEndpoint } from './endpoints/frontend'
 import { About } from './globals/About'
 import { Contact } from './globals/Contact'
@@ -36,9 +38,9 @@ export default buildConfig({
       titleSuffix: '— Royal Reelz',
     },
   },
-  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos],
+  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries],
   globals: [Site, About, Destinations, Gallery, Contact],
-  endpoints: [frontendEndpoint],
+  endpoints: [frontendEndpoint, enquiryEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
