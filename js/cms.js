@@ -202,19 +202,23 @@
 
       var grids = $$('.atlas-grid', destSec);
       var places = d.places || {};
-      if (grids[0] && (places.international || []).length) {
-        grids[0].innerHTML = list(places.international, function (p) {
-          return '<article><img class="place-mark" src="' + esc(p.icon) + '" alt="">' +
-            '<h4>' + esc(p.name) + '</h4><p>' + esc(p.location) + '</p></article>';
-        });
+
+      // Har card CMS ke fields se banta hai: naam, sub line (location), aur venues list.
+      // Region (International / India) se farak nahi padta - jo fields bhare hain wahi dikhte hain.
+      function placeCard(p) {
+        var img = p.icon ? '<img class="place-mark" src="' + esc(p.icon) + '" alt="">' : '';
+        var sub = p.location ? '<p>' + esc(p.location) + '</p>' : '';
+        var venues = (p.venues || []).length
+          ? '<ul>' + list(p.venues, function (v) { return '<li>' + esc(v) + '</li>'; }) + '</ul>'
+          : '';
+        return '<article>' + img + '<h4>' + esc(p.name) + '</h4>' + sub + venues + '</article>';
       }
-      if (grids[1] && (places.india || []).length) {
-        grids[1].innerHTML = list(places.india, function (p) {
-          return '<article><img class="place-mark" src="' + esc(p.icon) + '" alt="">' +
-            '<h4>' + esc(p.name) + '</h4><ul>' +
-            list(p.venues, function (v) { return '<li>' + esc(v) + '</li>'; }) +
-            '</ul></article>';
-        });
+
+      // CMS me koi bhi place ho to dono grids CMS se hi bharo (khaali region = khaali grid).
+      var hasPlaces = (places.international || []).length || (places.india || []).length;
+      if (hasPlaces) {
+        if (grids[0]) grids[0].innerHTML = list(places.international, placeCard);
+        if (grids[1]) grids[1].innerHTML = list(places.india, placeCard);
       }
     }
 

@@ -597,8 +597,8 @@ ul { list-style: none; }
   text-transform: uppercase;
   color: var(--on-surface-variant);
 }
-.india-grid ul { margin-top: 0.5rem; }
-.india-grid li {
+.atlas-grid ul { margin-top: 0.5rem; }
+.atlas-grid li {
   font-size: 0.875rem;
   font-weight: 300;
   line-height: 1.7;
