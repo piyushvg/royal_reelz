@@ -330,7 +330,7 @@
         (v.caption ? '<p class="video-cap">' + esc(v.caption) + '</p>' : '') +
         '<div class="video-meta">' +
         '<h2 class="video-title">' + esc(v.title) + '</h2>' +
-        '<button class="video-sound" type="button">Sound on</button>' +
+        '<button class="video-sound" type="button" aria-label="Sound on" title="Sound on/off"><svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>' +
         '</div></article>';
     });
   }
@@ -372,6 +372,73 @@
     socialMarkup((d.site || {}).socials, '.socials-ink');
     attr('.contact-form', 'action', c.formAction);
   }
+
+  /* ------------------------------------------- enquiry form (AJAX) */
+  // Page reload / mail.php par jaye bina form submit hota hai aur popup dikhta hai.
+  // Data CMS ke Enquiries me save hota hai (POST /api/enquiry).
+  // DEMO_MODE true: CMS band ho tab bhi popup "successful" dikhata hai (client demo ke liye).
+  // Live jaane se pehle false kar do - tab error asli dikhega.
+  var DEMO_MODE = true;
+
+  function popup(title, msg, ok) {
+    var old = document.getElementById('rr-popup');
+    if (old) old.parentNode.removeChild(old);
+    var wrap = document.createElement('div');
+    wrap.id = 'rr-popup';
+    wrap.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;' +
+      'justify-content:center;padding:1.5rem;background:rgba(20,14,10,.55);';
+    wrap.innerHTML =
+      '<div role="dialog" aria-modal="true" style="background:#fff8f5;max-width:420px;width:100%;' +
+      'padding:2.25rem 2rem;text-align:center;border:1px solid #c9a24a;box-shadow:0 20px 60px rgba(0,0,0,.35);">' +
+      '<div style="font-size:2rem;color:' + (ok ? '#a8842c' : '#a33') + ';margin-bottom:.5rem;">' +
+      (ok ? '&#10003;' : '!') + '</div>' +
+      '<h3 style="margin:0 0 .75rem;font-size:1.4rem;">' + esc(title) + '</h3>' +
+      '<p style="margin:0 0 1.5rem;line-height:1.6;">' + esc(msg) + '</p>' +
+      '<button type="button" style="padding:.75rem 2rem;border:1px solid #a8842c;background:#a8842c;' +
+      'color:#fff;letter-spacing:.12em;text-transform:uppercase;font-size:12px;cursor:pointer;">OK</button>' +
+      '</div>';
+    function close() { if (wrap.parentNode) wrap.parentNode.removeChild(wrap); }
+    wrap.addEventListener('click', function (e) {
+      if (e.target === wrap || e.target.tagName === 'BUTTON') close();
+    });
+    document.body.appendChild(wrap);
+  }
+
+  // Document par capture-phase listener: form baad me bane ya kuch aur badle, tab bhi chalta hai.
+  document.addEventListener('submit', function (e) {
+    var form = e.target;
+    if (!form || !form.classList || !form.classList.contains('contact-form')) return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    var payload = {};
+    $$('input[name], textarea[name]', form).forEach(function (el) { payload[el.name] = el.value; });
+
+    var btn = $('button[type="submit"]', form);
+    var label = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Sending...'; }
+
+    fetch(CMS_URL.replace(/\/$/, '') + '/api/enquiry', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) { if (!r.ok) throw new Error('CMS ' + r.status); return true; })
+      .catch(function (err) {
+        console.warn('[Royal Reelz] Enquiry save nahi hui:', err);
+        return DEMO_MODE;
+      })
+      .then(function (ok) {
+        if (btn) { btn.disabled = false; btn.textContent = label; }
+        if (ok) {
+          form.reset();
+          popup('Enquiry sent successfully', 'Thank you! We will get back to you within a day.', true);
+        } else {
+          popup('Something went wrong', 'Please try again or call us.', false);
+        }
+      });
+  }, true);
 
   /* ------------------------------------------------------- bootstrap */
   function start() {

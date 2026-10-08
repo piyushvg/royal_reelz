@@ -37,6 +37,15 @@ export default buildConfig({
     meta: {
       titleSuffix: '— Royal Reelz',
     },
+    theme: 'light',
+    components: {
+      beforeNavLinks: ['/components/SidebarLogo#SidebarLogo'],
+      graphics: {
+        Logo: '/components/Logo#Logo',
+        Icon: '/components/Icon#Icon',
+      },
+      beforeDashboard: ['/components/BeforeDashboard#BeforeDashboard'],
+    },
   },
   collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries],
   globals: [Site, About, Destinations, Gallery, Contact],
