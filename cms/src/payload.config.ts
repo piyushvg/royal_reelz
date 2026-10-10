@@ -52,9 +52,9 @@ export default buildConfig({
   endpoints: [frontendEndpoint, enquiryEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
-  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000',
+  serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:9007',
   cors: [
-    'http://localhost:3000',
+    'http://localhost:9007',
     'http://localhost',
     'http://127.0.0.1',
     'http://localhost:80',
@@ -65,7 +65,7 @@ export default buildConfig({
     'http://localhost:5500',
   ],
   csrf: [
-    'http://localhost:3000',
+    'http://localhost:9007',
     'http://localhost',
     'http://127.0.0.1',
     'http://127.0.0.1:5500',
