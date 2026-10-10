@@ -124,15 +124,15 @@
           });
           document.querySelectorAll('.video-sound').forEach(function (b) {
             b.classList.remove('is-on');
-            b.textContent = 'Sound on';
+            b.setAttribute('aria-label', 'Sound on');
           });
           entry.player.unMute();
           btn.classList.add('is-on');
-          btn.textContent = 'Sound off';
+          btn.setAttribute('aria-label', 'Sound off');
         } else {
           entry.player.mute();
           btn.classList.remove('is-on');
-          btn.textContent = 'Sound on';
+          btn.setAttribute('aria-label', 'Sound on');
         }
       });
     });
