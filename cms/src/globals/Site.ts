@@ -69,7 +69,8 @@ export const Site: GlobalConfig = {
           type: 'text',
           required: true,
           admin: {
-            description: 'Use #cover, #about, #destinations, or #gallery.',
+            description:
+              'Home: index.html. About: about.html. Destinations: index.html#destinations. Gallery: gallery.html. Videos: videos.html. Contact: contact.html.',
           },
         },
       ],

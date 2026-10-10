@@ -1,34 +1,41 @@
+import { existsSync } from 'node:fs'
+import path from 'node:path'
 import type { Endpoint, Payload } from 'payload'
 
 type UploadValue = { url?: string | null } | number | null | undefined
 
-function serverURL() {
-  return (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:9007').replace(/\/$/, '')
+function publicURL(raw: string) {
+  let value = raw.trim()
+  const markdownMatch = value.match(/^\[.*\]\((.*)\)$/)
+  if (markdownMatch) value = markdownMatch[1].trim()
+
+  const base = (process.env.NEXT_PUBLIC_SERVER_URL || '').replace(/\/$/, '')
+  if (base && value.startsWith(base) && !value.startsWith(`${base}/`)) {
+    value = `${base}/${value.slice(base.length)}`
+  }
+  if (base && (value === base || value.startsWith(`${base}/`))) {
+    value = value.slice(base.length) || '/'
+  }
+
+  if (/^https?:\/\//i.test(value) || value.startsWith('//')) return value
+  if (!value.startsWith('/')) value = `/${value.replace(/^\.\//, '')}`
+  return value
+}
+
+function mediaFileOnDisk(url: string) {
+  const match = url.match(/\/api\/media\/file\/([^?#]+)$/)
+  if (!match) return true
+  const filename = decodeURIComponent(match[1])
+  if (!filename || filename.includes('..') || filename.includes('\\') || filename.startsWith('/')) return false
+  return existsSync(path.join(process.cwd(), 'media', filename))
 }
 
 export function mediaSrc(file: UploadValue, fallback?: string | null): string {
-  if (file && typeof file === 'object' && file.url) {
-    let url = file.url
-
-    // Agar accidentally Markdown link aa gaya ho:
-    const markdownMatch = url.match(/^\[.*\]\((.*)\)$/)
-    if (markdownMatch) {
-      url = markdownMatch[1]
-    }
-
-    return url.startsWith('http') ? url : `${serverURL()}${url}`
-  }
-
-  if (fallback) {
-    const markdownMatch = fallback.match(/^\[.*\]\((.*)\)$/)
-    if (markdownMatch) {
-      fallback = markdownMatch[1]
-    }
-
-    return fallback.startsWith('http') ? fallback : `${serverURL()}${fallback}`
-  }
-
-  return ''
+  const uploaded = file && typeof file === 'object' && file.url ? publicURL(file.url) : ''
+  const pathFallback = fallback ? publicURL(fallback) : ''
+  if (uploaded && mediaFileOnDisk(uploaded)) return uploaded
+  if (pathFallback) return pathFallback
+  return uploaded
 }
 
 async function docsOf<
