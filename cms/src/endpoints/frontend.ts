@@ -3,7 +3,7 @@ import type { Endpoint, Payload } from 'payload'
 type UploadValue = { url?: string | null } | number | null | undefined
 
 function serverURL() {
-  return (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:3000').replace(/\/$/, '')
+  return (process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:9007').replace(/\/$/, '')
 }
 
 export function mediaSrc(file: UploadValue, fallback?: string | null): string {
