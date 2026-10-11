@@ -15,11 +15,11 @@
 .rr-logo__word { text-align: center; line-height: 1.1; }
 .rr-logo__word span { display: block; font-size: 1.6rem; font-weight: 600; letter-spacing: 0.04em; color: var(--rr-gold); }
 .rr-logo__word small { display: block; margin-top: 4px; font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; opacity: 0.75; }
-.rr-icon {
-  width: 34px; flex: none; height: 34px; border-radius: 8px;
-  display: grid; place-items: center;
-  background: var(--rr-maroon); color: var(--rr-gold);
-  font-weight: 700; font-size: 13px; letter-spacing: 0.06em;
+.rr-icon-img {
+  width: 34px;
+  height: 34px;
+  object-fit: contain;
+  display: block;
 }
 
 /* login page */

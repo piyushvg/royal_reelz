@@ -1,8 +1,5 @@
 import React from 'react'
 
-/** Small monogram used in the collapsed sidebar / favicon spot. */
 export const Icon: React.FC = () => (
-  <div className="rr-icon" aria-label="Royal Reelz">
-    RR
-  </div>
+  <img className="rr-icon-img" src="/images/logo-white.png" alt="Royal Reelz" />
 )

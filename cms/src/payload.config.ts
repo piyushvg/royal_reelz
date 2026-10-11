@@ -36,6 +36,7 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: '— Royal Reelz',
+      icons: [{ rel: 'icon', type: 'image/png', url: '/images/logo-ink.png' }],
     },
     theme: 'light',
     components: {
