@@ -62,6 +62,18 @@
     if (ul && out) ul.innerHTML = out;
   }
 
+  // Address 2 lines me: CMS me Enter se line todo, nahi to beech ke comma par apne aap
+  function splitAddress(addr) {
+    var parts = String(addr).split(/\r?\n/).map(function (x) { return x.trim(); }).filter(Boolean);
+    if (parts.length >= 2) return parts.slice(0, 2);
+    var one = parts[0] || '';
+    var mid = one.length / 2, best = -1, dist = 1e9;
+    for (var i = 0; i < one.length; i++) {
+      if (one[i] === ',' && Math.abs(i - mid) < dist) { best = i; dist = Math.abs(i - mid); }
+    }
+    return best < 0 ? [one] : [one.slice(0, best + 1).trim(), one.slice(best + 1).trim()];
+  }
+
   /* ------------------------------------------------- shared shell */
   function renderShell(d) {
     var site = d.site || {};
@@ -70,7 +82,20 @@
     if (isHome && site.title) document.title = site.title;
 
     attr('.loader-logo', 'src', site.logoWhite);
-    text('.loader-kicker', site.loaderKicker);
+    // ek hi tagline: loader + cover (header) + footer logo ke neeche
+    text('.loader-kicker', site.tagline);
+    text('.hero-kicker', site.tagline);
+
+    // favicon (CMS se)
+    if (site.favicon) {
+      $$('link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]').forEach(function (l) {
+        l.parentNode.removeChild(l);
+      });
+      var fav = document.createElement('link');
+      fav.rel = 'icon';
+      fav.href = site.favicon;
+      document.head.appendChild(fav);
+    }
     attr('.site-header .logo-dark', 'src', site.logoWhite);
     attr('.site-header .logo-light', 'src', site.logoInk);
 
@@ -109,22 +134,32 @@
     var contact = d.contact || {};
     var footContact = $('.foot-contact');
     if (footContact && (contact.address || contact.email || contact.phone)) {
+      var out = '';
+      if (contact.address) {
+        splitAddress(contact.address).forEach(function (line) {
+          out += '<span class="foot-line">' + esc(line) + '</span>';
+        });
+      }
       var bits = [];
-      if (contact.address) bits.push(esc(contact.address));
       if (contact.email) bits.push('<a href="mailto:' + esc(contact.email) + '">' + esc(contact.email) + '</a>');
       if (contact.phone) {
         bits.push('<a href="tel:' + esc(contact.phone.replace(/[^\d+]/g, '')) + '">' + esc(contact.phone) + '</a>');
       }
-      footContact.innerHTML = bits.join('<span class="foot-sep">&#10070;</span>');
+      if (bits.length) out += '<span class="foot-line">' + bits.join('<span class="foot-sep">&#10070;</span>') + '</span>';
+      footContact.innerHTML = out;
     }
-    text('.foot-base', site.footer);
+
+    // copyright: purani "MMXXVI" value ho to naya format; {year} apne aap badal jata hai
+    var base = site.footer || '';
+    if (!base || /MMXXVI/i.test(base)) base = '\u00a9 Royal Reelz {year}. All rights reserved.';
+    text('.foot-base', base.replace('{year}', new Date().getFullYear()));
 
     var credit = site.credit || {};
     var creditEl = $('.foot-credit');
-    if (creditEl && credit.name) {
+    if (creditEl) {
       creditEl.innerHTML = esc(credit.text || 'Designed and Powered by') + ' ' +
-        '<a href="' + esc(credit.url || '#') + '" target="_blank" rel="noopener">' +
-        esc(credit.name) + '</a>';
+        '<a href="' + esc(credit.url || 'https://sandvirp.com/') + '" target="_blank" rel="noopener">' +
+        esc(credit.name || 'Sandvirp Solutions') + '</a>';
     }
 
     // WhatsApp

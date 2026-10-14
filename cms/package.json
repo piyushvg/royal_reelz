@@ -13,6 +13,7 @@
     "payload": "cross-env NODE_OPTIONS=--no-deprecation payload"
   },
   "dependencies": {
+    "@libsql/client": "^0.18.0",
     "@payloadcms/db-sqlite": "3.90.2",
     "@payloadcms/next": "3.90.2",
     "@payloadcms/richtext-lexical": "3.90.2",
@@ -31,5 +32,4 @@
     "@types/react-dom": "19.2.3",
     "typescript": "5.7.3"
   }
-  
 }

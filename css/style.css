@@ -942,14 +942,14 @@ ul { list-style: none; }
   width: 40px;
   height: 40px;
   border: 1px solid var(--hairline);
-  color: var(--gold-deep);
+  color: var(--primary-container); /* maroon by default */
   transition: background 0.35s ease, color 0.35s ease, border-color 0.35s ease;
 }
 .socials svg { width: 19px; height: 19px; }
 .socials a:hover {
-  background: var(--primary-container);
-  color: var(--surface);
-  border-color: var(--primary-container);
+  background: transparent;
+  color: var(--gold-deep); /* hover par gold */
+  border-color: var(--gold);
 }
 
 .foot-contact {
@@ -1292,14 +1292,25 @@ ul { list-style: none; }
 .foot-bar {
   max-width: 1160px;
   margin: 0 auto;
-  padding: 0.9rem 0;
+  padding: 1.1rem 0 1rem;
   border-top: 1px solid var(--hairline);
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.5rem 1.5rem;
+  text-align: center;
+  gap: 0.9rem;
 }
+.foot-line { display: block; }
+.foot-legal {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--hairline);
+}
+.foot-legal p { margin: 0; }
 .foot-contact {
   margin-top: 0;
   font-style: normal;
@@ -1313,6 +1324,10 @@ ul { list-style: none; }
   padding-top: 0;
   border-top: 0;
   font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #8d8079;
 }
 .foot-credit {
   font-size: 10px;

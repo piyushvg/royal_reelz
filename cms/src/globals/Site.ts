@@ -10,13 +10,23 @@ export const Site: GlobalConfig = {
   access: { read: publicRead, update: isLoggedIn },
   fields: [
     { name: 'title', label: 'Browser title', type: 'text', required: true },
-    { name: 'loaderKicker', label: 'Loading line', type: 'text', required: true },
+    { name: 'loaderKicker', label: 'Loading line (not used)', type: 'text', admin: { hidden: true } },
     ...uploadOrPath('logoWhite', 'White logo'),
     ...uploadOrPath('logoInk', 'Dark logo'),
     { name: 'edition', label: 'Cover edition line', type: 'text', required: true },
     { name: 'scrollHint', label: 'Scroll hint', type: 'text', required: true },
-    { name: 'footer', label: 'Footer copyright line', type: 'text', required: true },
-    { name: 'tagline', label: 'Logo tagline', type: 'text' },
+    {
+      name: 'footer',
+      label: 'Footer copyright line',
+      type: 'text',
+      admin: { description: 'Jaise: © Royal Reelz {year}. All rights reserved.  ({year} apne aap saal ban jayega)' },
+    },
+    {
+      name: 'tagline',
+      label: 'Tagline',
+      type: 'text',
+      admin: { description: 'Ek hi tagline: loading screen, cover/header aur footer logo ke neeche, teeno jagah yahi dikhegi.' },
+    },
     {
       name: 'credit',
       label: 'Footer credit',

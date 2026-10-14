@@ -25,7 +25,11 @@ export function mediaSrc(file: UploadValue, fallback?: string | null): string {
       fallback = markdownMatch[1]
     }
 
-    return fallback.startsWith('http') ? fallback : `${serverURL()}${fallback}`
+    if (fallback.startsWith('http')) return fallback
+
+    // 'images/team/01.jpg' jaisa relative path website ke apne images folder ka hai,
+    // CMS server ka nahi - use waise hi rehne do (pehle http://localhost:3000images/... ban jata tha).
+    return fallback.startsWith('/') ? `${serverURL()}${fallback}` : fallback
   }
 
   return ''
@@ -90,6 +94,7 @@ export const frontendEndpoint: Endpoint = {
       site: {
         title: site.title,
         loaderKicker: site.loaderKicker,
+        favicon: mediaSrc((site as any).favicon, (site as any).faviconPath),
         logoWhite: mediaSrc(site.logoWhite, site.logoWhitePath),
         logoInk: mediaSrc(site.logoInk, site.logoInkPath),
         edition: site.edition,

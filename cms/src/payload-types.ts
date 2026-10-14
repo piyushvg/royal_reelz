@@ -737,7 +737,7 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
 export interface Site {
   id: number;
   title: string;
-  loaderKicker: string;
+  loaderKicker?: string | null;
   /**
    * Leave this empty to keep the image path below.
    */
@@ -756,7 +756,13 @@ export interface Site {
   logoInkPath?: string | null;
   edition: string;
   scrollHint: string;
-  footer: string;
+  /**
+   * Jaise: © Royal Reelz {year}. All rights reserved.  ({year} apne aap saal ban jayega)
+   */
+  footer?: string | null;
+  /**
+   * Ek hi tagline: loading screen, cover/header aur footer logo ke neeche, teeno jagah yahi dikhegi.
+   */
   tagline?: string | null;
   credit?: {
     /**
