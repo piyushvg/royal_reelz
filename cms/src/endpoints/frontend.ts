@@ -97,6 +97,7 @@ export const frontendEndpoint: Endpoint = {
       site: {
         title: site.title,
         loaderKicker: site.loaderKicker,
+        favicon: mediaSrc((site as any).favicon, (site as any).faviconPath),
         logoWhite: mediaSrc(site.logoWhite, site.logoWhitePath),
         logoInk: mediaSrc(site.logoInk, site.logoInkPath),
         edition: site.edition,

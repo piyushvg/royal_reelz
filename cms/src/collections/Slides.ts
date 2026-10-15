@@ -8,7 +8,7 @@ export const Slides: CollectionConfig = {
   labels: { singular: 'Cover photo', plural: 'Cover photos' },
   admin: {
     useAsTitle: 'alt',
-    defaultColumns: ['alt', 'order', 'updatedAt'],
+    defaultColumns: ['image', 'alt', 'order', 'updatedAt'],
     group: 'Cover',
     description: 'Photos in the opening banner. Order controls the slideshow.',
   },

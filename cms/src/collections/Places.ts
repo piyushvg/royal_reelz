@@ -8,7 +8,7 @@ export const Places: CollectionConfig = {
   labels: { singular: 'Place', plural: 'Places' },
   admin: {
     useAsTitle: 'name',
-    defaultColumns: ['name', 'region', 'order'],
+    defaultColumns: ['icon', 'name', 'region', 'order'],
     group: 'Destinations',
     description: 'International cards show a location. India cards show a venue list.',
   },

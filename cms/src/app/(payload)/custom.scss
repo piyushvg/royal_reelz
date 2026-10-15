@@ -15,12 +15,6 @@
 .rr-logo__word { text-align: center; line-height: 1.1; }
 .rr-logo__word span { display: block; font-size: 1.6rem; font-weight: 600; letter-spacing: 0.04em; color: var(--rr-gold); }
 .rr-logo__word small { display: block; margin-top: 4px; font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; opacity: 0.75; }
-.rr-icon {
-  width: 34px; flex: none; height: 34px; border-radius: 8px;
-  display: grid; place-items: center;
-  background: var(--rr-maroon); color: var(--rr-gold);
-  font-weight: 700; font-size: 13px; letter-spacing: 0.06em;
-}
 
 /* login page */
 .login__brand { margin-bottom: 1.5rem; }
@@ -170,3 +164,36 @@ html[data-theme='dark'] .dashboard .card__title { color: var(--rr-gold); }
 /* buttons / focus */
 .btn--style-primary { background: var(--rr-maroon); border-color: var(--rr-maroon); }
 .btn--style-primary:hover { background: var(--rr-maroon-2); border-color: var(--rr-maroon-2); }
+
+/* ---------- header icon: kate nahi, poora dikhe ---------- */
+.app-header { overflow: visible; }
+.app-header .rr-icon, .step-nav .rr-icon { width: 26px; height: 26px; margin: 0; }
+.step-nav__home, .step-nav a:first-child { display: flex; align-items: center; }
+
+/* ---------- Save / Publish buttons ---------- */
+.doc-controls { align-items: center; }
+.doc-controls .form-submit, .doc-controls__controls-wrapper, .doc-controls__controls { display: flex; align-items: center; gap: 0.6rem; }
+.form-submit .btn,
+.doc-controls .btn--style-primary,
+button.btn--style-primary,
+a.btn--style-primary {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 40px; min-width: 88px; margin: 0; padding: 0 1.4rem;
+  border-radius: 999px;
+  background: var(--rr-maroon); border: 1px solid var(--rr-maroon);
+  color: #fff; font-weight: 600; font-size: 13px; letter-spacing: 0.04em; line-height: 1;
+  box-shadow: 0 2px 6px rgba(44, 0, 9, 0.2);
+  transition: background 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+.form-submit .btn:hover:not(:disabled),
+button.btn--style-primary:hover:not(:disabled) {
+  background: var(--rr-maroon-2); border-color: var(--rr-maroon-2);
+  transform: translateY(-1px); box-shadow: 0 6px 14px rgba(44, 0, 9, 0.25);
+}
+.form-submit .btn:disabled, button.btn--style-primary:disabled { opacity: 0.45; box-shadow: none; cursor: not-allowed; }
+.form-submit .btn .btn__content, .form-submit .btn .btn__label,
+button.btn--style-primary .btn__content, button.btn--style-primary .btn__label { color: inherit; line-height: 1; }
+.btn--style-secondary, .btn--style-pill {
+  border-radius: 999px; border-color: var(--rr-line);
+}
+.btn--style-secondary:hover { border-color: var(--rr-gold); }
