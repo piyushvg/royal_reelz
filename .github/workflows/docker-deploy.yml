@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
       - uses: docker/setup-qemu-action@v3
         with:
           platforms: arm64
@@ -50,3 +52,33 @@ jobs:
             docker compose pull royal-reelz
             docker compose up -d --remove-orphans royal-reelz
             docker image prune -f
+            # Notify failure must not fail the deploy (same as mobile release.sh).
+      - name: Notify Zoho Cliq
+        if: success() || failure()
+        continue-on-error: true
+        env:
+          CLIQ_WEBHOOK_URL: ${{ secrets.CLIQ_WEBHOOK_URL }}
+          JOB_STATUS: ${{ job.status }}
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+          ACTOR: ${{ github.actor }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          if [ -z "$CLIQ_WEBHOOK_URL" ]; then
+            echo "::warning::CLIQ_WEBHOOK_URL not set — skipping Cliq"
+            exit 0
+          fi
+          NAME=$(jq -r '.displayName // .id' "tenants/${{ matrix.tenant }}/tenant.json")
+          ENV_TAG=PROD
+          if [ "$JOB_STATUS" = "success" ]; then STATUS="✅"; else STATUS="❌ FAILED"; fi
+          MSG=$(printf '%s' "$COMMIT_MSG" | head -n1)
+          TEXT=$(printf '*%s %s Web Release*  %s\n🔖 %s by %s\n💬 %s\n🔗 %s' \
+            "$NAME" "$ENV_TAG" "$STATUS" "${GITHUB_SHA::7}" "$ACTOR" "${MSG:-manual run}" "$RUN_URL")
+          CODE=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$CLIQ_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg t "$TEXT" '{text: $t}')" 2>/dev/null || echo "000")
+          if [ "$CODE" = "200" ] || [ "$CODE" = "204" ]; then
+            echo "Posted to Cliq"
+          else
+            echo "::warning::Cliq post failed (HTTP $CODE)"
+          fi
+
