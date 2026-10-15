@@ -7,6 +7,11 @@ const dirname = path.dirname(fileURLToPath(import.meta.url))
 
 const nextConfig: NextConfig = {
   agentRules: false,
+  async rewrites() {
+    return {
+      beforeFiles: [{ source: '/', destination: '/index.html' }],
+    }
+  },
   images: {
     localPatterns: [
       {

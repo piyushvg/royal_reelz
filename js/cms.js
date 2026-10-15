@@ -7,10 +7,10 @@
 
   /* ---------------------------------------------------------------
      SETUP: yahan apne Payload server ka URL daalo.
-     Local:      http://localhost:3000
+     Local:      http://localhost:9007
      Production: https://cms.royalreelz.com  (jo bhi domain ho)
      --------------------------------------------------------------- */
-  var CMS_URL = 'http://localhost:3000';
+  var CMS_URL = 'http://localhost:9007';
 
   var API = CMS_URL.replace(/\/$/, '') + '/api/frontend';
   var WREATH = 'images/wreath.png';

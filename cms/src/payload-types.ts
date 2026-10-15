@@ -794,7 +794,7 @@ export interface Site {
     | {
         label: string;
         /**
-         * Use #cover, #about, #destinations, or #gallery.
+         * Home: index.html. About: about.html. Destinations: index.html#destinations. Gallery: gallery.html. Videos: videos.html. Contact: contact.html.
          */
         href: string;
         id?: string | null;

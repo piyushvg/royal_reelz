@@ -145,8 +145,8 @@ export async function seedIfEmpty(payload: Payload) {
       logoInkPath: 'images/logo-ink.png',
       edition: '2026 Edition',
       scrollHint: 'Discover',
-      footer: '\u00a9 MMXXVI Royal Reelz. All rights reserved.',
-      tagline: 'Atelier \u00b7 Cinema',
+      footer: '\u00a9 Royal Reelz. All rights reserved.',
+      tagline: 'A celebration of love',
       credit: {
         text: 'Designed and Powered by',
         name: 'Sandvirp Solutions',
