@@ -18,6 +18,7 @@ import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
 import { enquiryEndpoint } from './endpoints/enquiry'
 import { frontendEndpoint } from './endpoints/frontend'
+import { migrations } from './migrations'
 import { About } from './globals/About'
 import { Contact } from './globals/Contact'
 import { Destinations } from './globals/Destinations'
@@ -79,6 +80,7 @@ export default buildConfig({
       url: process.env.DATABASE_URL || 'file:./royal-reelz.db',
     },
     push: true,
+    prodMigrations: migrations,
   }),
   sharp,
   plugins: [],
