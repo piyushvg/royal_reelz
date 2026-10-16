@@ -10,7 +10,8 @@
 }
 
 /* ---------- logo ---------- */
-.rr-logo { display: flex; align-items: center; justify-content: center; }
+.rr-logo { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+.rr-logo__kicker { display: block; text-align: center; font-size: 9px; font-weight: 600; letter-spacing: 0.28em; text-transform: uppercase; color: var(--rr-gold); }
 .rr-logo__img { display: block; max-width: 190px; max-height: 64px; width: auto; height: auto; object-fit: contain; }
 .rr-logo__word { text-align: center; line-height: 1.1; }
 .rr-logo__word span { display: block; font-size: 1.6rem; font-weight: 600; letter-spacing: 0.04em; color: var(--rr-gold); }
@@ -20,6 +21,7 @@
 .login__brand { margin-bottom: 1.5rem; }
 .login .rr-logo__img { max-width: 240px; max-height: 90px; }
 .login .rr-logo__word span { color: var(--rr-maroon); }
+.login .rr-logo__kicker { color: var(--rr-gold-deep); }
 html[data-theme='dark'] .login .rr-logo__word span { color: var(--rr-gold); }
 
 /* ---------- sidebar ---------- */

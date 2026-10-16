@@ -36,7 +36,15 @@ export default buildConfig({
       baseDir: path.resolve(dirname),
     },
     meta: {
-      titleSuffix: '— Royal Reelz',
+      titleSuffix: '— Royal Reelz CMS',
+      description: 'Royal Reelz CMS — manage the Royal Reelz luxury wedding films & photography website.',
+      icons: [{ rel: 'icon', url: '/favicon.ico' }],
+      openGraph: {
+        siteName: 'Royal Reelz CMS',
+        title: 'Royal Reelz CMS',
+        description: 'Royal Reelz CMS — manage the Royal Reelz luxury wedding films & photography website.',
+        images: [],
+      },
     },
     theme: 'light',
     components: {

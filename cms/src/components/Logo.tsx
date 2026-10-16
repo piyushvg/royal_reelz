@@ -37,6 +37,7 @@ export const Logo: React.FC<Props> = ({ variant = 'ink' }) => {
 
   return (
     <div className={`rr-logo rr-logo--${variant}`}>
+      <small className="rr-logo__kicker">Luxury Wedding Films &amp; Photography</small>
       {src ? (
         <img
           className="rr-logo__img"
