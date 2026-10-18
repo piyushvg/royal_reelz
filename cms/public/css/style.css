@@ -2071,6 +2071,7 @@ ul {
   gap: 0.9rem;
 }
 .foot-line { display: block; }
+.foot-reach { margin-top: 0.35rem; }
 .foot-legal {
   width: 100%;
   display: flex;

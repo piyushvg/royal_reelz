@@ -39,6 +39,23 @@
   }
   function list(items, fn) { return (items || []).map(fn).join(''); }
 
+  function addressLines(address) {
+    var raw = String(address || '').trim();
+    if (!raw) return [];
+    var broken = raw.split(/\r?\n/).map(function (line) { return line.trim(); }).filter(Boolean);
+    if (broken.length >= 2) return [broken[0], broken.slice(1).join(' ')];
+    var commas = [];
+    for (var i = 0; i < raw.length; i++) if (raw.charAt(i) === ',') commas.push(i);
+    if (!commas.length) return [raw];
+    var mid = raw.length / 2;
+    var cut = commas[0];
+    commas.forEach(function (i) {
+      if (Math.abs(i - mid) < Math.abs(cut - mid)) cut = i;
+    });
+    var second = raw.slice(cut + 1).trim();
+    return second ? [raw.slice(0, cut + 1).trim(), second] : [raw];
+  }
+
   var SOCIAL_SVG = {
     facebook: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M13.5 21v-8h2.7l.4-3h-3.1V8.1c0-.9.3-1.5 1.5-1.5h1.7V3.9c-.3 0-1.3-.1-2.5-.1-2.5 0-4.2 1.5-4.2 4.3V10H7.3v3H10v8h3.5z"/></svg>',
     instagram: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="none" stroke="currentColor" stroke-width="1.4" d="M4 8a4 4 0 0 1 4-4h8a4 4 0 0 1 4 4v8a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4V8z"/><circle cx="12" cy="12" r="3.4" fill="none" stroke="currentColor" stroke-width="1.4"/><circle cx="16.8" cy="7.2" r="1.1" fill="currentColor"/></svg>',
@@ -105,13 +122,20 @@
     var contact = d.contact || {};
     var footContact = $('.foot-contact');
     if (footContact && (contact.address || contact.email || contact.phone)) {
-      var bits = [];
-      if (contact.address) bits.push(esc(contact.address));
-      if (contact.email) bits.push('<a href="mailto:' + esc(contact.email) + '">' + esc(contact.email) + '</a>');
-      if (contact.phone) {
-        bits.push('<a href="tel:' + esc(contact.phone.replace(/[^\d+]/g, '')) + '">' + esc(contact.phone) + '</a>');
+      var lines = addressLines(contact.address).map(function (line) {
+        return '<span class="foot-line">' + esc(line) + '</span>';
+      });
+      var reach = [];
+      if (contact.email) {
+        reach.push('<a href="mailto:' + esc(contact.email) + '">' + esc(contact.email) + '</a>');
       }
-      footContact.innerHTML = bits.join('<span class="foot-sep">&#10070;</span>');
+      if (contact.phone) {
+        reach.push('<a href="tel:' + esc(contact.phone.replace(/[^\d+]/g, '')) + '">' + esc(contact.phone) + '</a>');
+      }
+      if (reach.length) {
+        lines.push('<span class="foot-line foot-reach">' + reach.join('<span class="foot-sep">&#10070;</span>') + '</span>');
+      }
+      footContact.innerHTML = lines.join('');
     }
     text('.foot-base', site.footer);
 
