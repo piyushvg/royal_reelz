@@ -1,7 +1,7 @@
-import { sqliteAdapter } from '@payloadcms/db-sqlite'
+import { sql, sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
-import { buildConfig } from 'payload'
+import { buildConfig, type Payload } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
@@ -29,6 +29,19 @@ import { seedIfEmpty } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+/** Production DB predates the name/role columns. Login SELECTs them and 500s if they are absent. */
+async function ensureUserColumns(payload: Payload) {
+  const info = await payload.db.drizzle.run(sql`PRAGMA table_info(users)`)
+  const names = new Set((info.rows as { name: string }[]).map((row) => row.name))
+
+  if (!names.has('name')) {
+    await payload.db.drizzle.run(sql`ALTER TABLE \`users\` ADD \`name\` text`)
+  }
+  if (!names.has('role')) {
+    await payload.db.drizzle.run(sql`ALTER TABLE \`users\` ADD \`role\` text DEFAULT 'admin' NOT NULL`)
+  }
+}
 
 export default buildConfig({
   admin: {
@@ -73,6 +86,8 @@ export default buildConfig({
     // Royal Reelz local frontend
     'http://127.0.0.1:5500',
     'http://localhost:5500',
+    'https://royalreelz.sandvirp.com',
+    'https://cms.sandvirp.com',
   ],
   csrf: [
     'http://localhost:9007',
@@ -80,6 +95,8 @@ export default buildConfig({
     'http://127.0.0.1',
     'http://127.0.0.1:5500',
     'http://localhost:5500',
+    'https://royalreelz.sandvirp.com',
+    'https://cms.sandvirp.com',
   ],
   typescript: {
     outputFile: path.resolve(dirname, 'payload-types.ts'),
@@ -94,6 +111,7 @@ export default buildConfig({
   sharp,
   plugins: [],
   onInit: async (payload) => {
+    await ensureUserColumns(payload)
     await seedIfEmpty(payload)
 
     // Role column add hote hi purana owner "customer" ban gaya tha,
