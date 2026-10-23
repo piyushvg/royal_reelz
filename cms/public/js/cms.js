@@ -75,6 +75,20 @@
     if (ul && out) ul.innerHTML = out;
   }
 
+  // "Client Login" link header + footer menu me (CMS menu me na ho to bhi dikhe)
+  function ensurePortalLink() {
+    var here = (location.pathname.split('/').pop() || '').toLowerCase();
+    [['.site-nav', 'nav-link'], ['.foot-nav', '']].forEach(function (p) {
+      var nav = $(p[0]);
+      if (!nav || nav.querySelector('a[href$="portal.html"]')) return;
+      var a = document.createElement('a');
+      a.href = 'portal.html';
+      a.textContent = 'Client Login';
+      if (p[1]) a.className = p[1] + (here === 'portal.html' ? ' is-current' : '');
+      nav.appendChild(a);
+    });
+  }
+
   /* ------------------------------------------------- shared shell */
   function renderShell(d) {
     var site = d.site || {};
@@ -146,6 +160,8 @@
         '<a href="' + esc(credit.url || '#') + '" target="_blank" rel="noopener">' +
         esc(credit.name) + '</a>';
     }
+
+    ensurePortalLink();
 
     // WhatsApp
     var wa = site.whatsapp || {};

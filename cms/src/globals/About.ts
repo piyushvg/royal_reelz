@@ -1,11 +1,15 @@
 import type { GlobalConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
+import { siteURL } from '../preview'
 
 export const About: GlobalConfig = {
   slug: 'about',
   label: 'About text',
-  admin: { group: 'About' },
+  admin: {
+    preview: () => siteURL('about.html'),
+    group: 'About',
+  },
   access: { read: publicRead, update: isLoggedIn },
   fields: [
     { name: 'title', type: 'text', required: true },

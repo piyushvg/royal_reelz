@@ -199,3 +199,5 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
   border-radius: 999px; border-color: var(--rr-line);
 }
 .btn--style-secondary:hover { border-color: var(--rr-gold); }
+/* welcome banner buttons */
+.rr-welcome__btns { display: flex; flex-wrap: wrap; gap: 0.6rem; }

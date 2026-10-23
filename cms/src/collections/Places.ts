@@ -2,11 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
 import { orderField, uploadOrPath } from '../fields'
+import { siteURL } from '../preview'
 
 export const Places: CollectionConfig = {
   slug: 'places',
   labels: { singular: 'Place', plural: 'Places' },
   admin: {
+    preview: () => siteURL('index.html#destinations'),
     useAsTitle: 'name',
     defaultColumns: ['icon', 'name', 'region', 'order'],
     group: 'Destinations',

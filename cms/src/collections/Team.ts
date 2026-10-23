@@ -2,11 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
 import { orderField, uploadOrPath } from '../fields'
+import { siteURL } from '../preview'
 
 export const Team: CollectionConfig = {
   slug: 'team',
   labels: { singular: 'Team member', plural: 'Creative team' },
   admin: {
+    preview: () => siteURL('about.html'),
     useAsTitle: 'name',
     defaultColumns: ['photo', 'name', 'role', 'order'],
     group: 'About',

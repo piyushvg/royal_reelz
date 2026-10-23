@@ -94,6 +94,13 @@ function initRoyalReelz() {
         });
       }, { threshold: 0.1, rootMargin: '0px 0px -6% 0px' });
       $items.each(function () { io.observe(this); });
+      // jo items pehle se screen me hain unhe turant dikhao (observer miss ho to bhi)
+      setTimeout(function () {
+        $items.each(function () {
+          var r = this.getBoundingClientRect();
+          if (r.top < window.innerHeight && r.bottom > 0) this.classList.add('is-in');
+        });
+      }, 400);
     } else {
       $items.addClass('is-in');
     }
@@ -110,13 +117,16 @@ function initRoyalReelz() {
       .filter('[data-panel="' + key + '"]').addClass('is-on');
   });
 
-  /* ---------- lightbox ---------- */
+  /* ---------- lightbox ----------
+     Har click par list DOM se banti hai (CMS se aayi images bhi chalti hain),
+     events namespaced hain, isliye initUI dobara chale tab bhi double-bind nahi hota. */
   var $box  = $('.lightbox');
   var $boxI = $box.find('img');
   var list  = [];
   var cur   = 0;
 
   function show(i) {
+    if (!list.length) return;
     cur = (i + list.length) % list.length;
     $boxI.attr('src', list[cur]);
   }
@@ -126,27 +136,44 @@ function initRoyalReelz() {
     $('body').css('overflow', '');
   }
 
-  $('.gallery-grid').on('click', '.gallery-item', function (e) {
+  $(document).off('.rrlb');
+  $('.lightbox-close, .lightbox-prev, .lightbox-next').off('.rrlb');
+  $box.off('.rrlb');
+
+  $(document).on('click.rrlb', '.gallery-grid .gallery-item', function (e) {
+    if (!$box.length) return;            // is page par lightbox nahi hai
     e.preventDefault();
-    list = $items.map(function () { return $(this).attr('href'); }).get();
-    show($items.index(this));
+    var $all = $('.gallery-grid .gallery-item');
+    list = $all.map(function () { return $(this).attr('href'); }).get();
+    show($all.index(this));
     $box.prop('hidden', false);
     $('body').css('overflow', 'hidden');
   });
 
-  $('.lightbox-close').on('click', close);
-  $('.lightbox-prev').on('click', function () { show(cur - 1); });
-  $('.lightbox-next').on('click', function () { show(cur + 1); });
-  $box.on('click', function (e) { if (e.target === this) close(); });
+  $('.lightbox-close').on('click.rrlb', close);
+  $('.lightbox-prev').on('click.rrlb', function (e) { e.stopPropagation(); show(cur - 1); });
+  $('.lightbox-next').on('click.rrlb', function (e) { e.stopPropagation(); show(cur + 1); });
+  $box.on('click.rrlb', function (e) { if (e.target === this) close(); });
 
-  if (window.RR && typeof window.RR.initVideos === 'function') window.RR.initVideos();
+  // mobile swipe
+  var touchX = null;
+  $box.on('touchstart.rrlb', function (e) { touchX = e.originalEvent.touches[0].clientX; });
+  $box.on('touchend.rrlb', function (e) {
+    if (touchX == null) return;
+    var dx = e.originalEvent.changedTouches[0].clientX - touchX;
+    if (Math.abs(dx) > 50) show(cur + (dx < 0 ? 1 : -1));
+    touchX = null;
+  });
 
-  $(document).on('keydown', function (e) {
+  $(document).on('keydown.rrlb', function (e) {
     if ($box.prop('hidden')) return;
     if (e.key === 'Escape') close();
     if (e.key === 'ArrowLeft') show(cur - 1);
     if (e.key === 'ArrowRight') show(cur + 1);
   });
+
+  if (window.RR && typeof window.RR.initVideos === 'function') window.RR.initVideos();
+
 }
 
 /* CMS data pehle aata hai, phir UI init hota hai.

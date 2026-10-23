@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
 import { Awards } from './collections/Awards'
+import { CustomerFiles } from './collections/CustomerFiles'
 import { Enquiries } from './collections/Enquiries'
 import { Media } from './collections/Media'
 import { Photos } from './collections/Photos'
@@ -56,7 +57,7 @@ export default buildConfig({
       beforeDashboard: ['/components/BeforeDashboard#BeforeDashboard'],
     },
   },
-  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries],
+  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries, CustomerFiles],
   globals: [Site, About, Destinations, Gallery, Contact],
   endpoints: [frontendEndpoint, enquiryEndpoint],
   editor: lexicalEditor(),
@@ -94,5 +95,26 @@ export default buildConfig({
   plugins: [],
   onInit: async (payload) => {
     await seedIfEmpty(payload)
+
+    // Purane users (role ke bina) ko admin bana do, taaki koi lock na ho.
+    try {
+      const legacy = await payload.find({
+        collection: 'users',
+        where: { role: { exists: false } } as any,
+        limit: 100,
+        depth: 0,
+        overrideAccess: true,
+      })
+      for (const user of legacy.docs) {
+        await payload.update({
+          collection: 'users',
+          id: user.id,
+          data: { role: 'admin' } as any,
+          overrideAccess: true,
+        })
+      }
+    } catch (err) {
+      payload.logger.warn({ err }, 'Could not backfill user roles')
+    }
   },
 })
