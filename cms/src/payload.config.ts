@@ -1,7 +1,7 @@
-import { sql, sqliteAdapter } from '@payloadcms/db-sqlite'
+import { sqliteAdapter } from '@payloadcms/db-sqlite'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import path from 'path'
-import { buildConfig, type Payload } from 'payload'
+import { buildConfig } from 'payload'
 import { fileURLToPath } from 'url'
 import sharp from 'sharp'
 
@@ -17,6 +17,7 @@ import { Slides } from './collections/Slides'
 import { Team } from './collections/Team'
 import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
+import { ensureLiveSchema } from './ensureLiveSchema'
 import { enquiryEndpoint } from './endpoints/enquiry'
 import { frontendEndpoint } from './endpoints/frontend'
 import { migrations } from './migrations'
@@ -29,19 +30,6 @@ import { seedIfEmpty } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
-
-/** Production DB predates the name/role columns. Login SELECTs them and 500s if they are absent. */
-async function ensureUserColumns(payload: Payload) {
-  const info = await payload.db.drizzle.run(sql`PRAGMA table_info(users)`)
-  const names = new Set((info.rows as unknown as { name: string }[]).map((row) => row.name))
-
-  if (!names.has('name')) {
-    await payload.db.drizzle.run(sql`ALTER TABLE \`users\` ADD \`name\` text`)
-  }
-  if (!names.has('role')) {
-    await payload.db.drizzle.run(sql`ALTER TABLE \`users\` ADD \`role\` text DEFAULT 'admin' NOT NULL`)
-  }
-}
 
 export default buildConfig({
   admin: {
@@ -111,7 +99,7 @@ export default buildConfig({
   sharp,
   plugins: [],
   onInit: async (payload) => {
-    await ensureUserColumns(payload)
+    await ensureLiveSchema(payload.db.drizzle)
     await seedIfEmpty(payload)
 
     // Role column add hote hi purana owner "customer" ban gaya tha,
