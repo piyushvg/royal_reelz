@@ -6,7 +6,7 @@ import { MigrateDownArgs, MigrateUpArgs, sql } from '@payloadcms/db-sqlite'
  */
 export async function up({ db }: MigrateUpArgs): Promise<void> {
   const info = await db.run(sql`PRAGMA table_info(users)`)
-  const names = new Set((info.rows as { name: string }[]).map((row) => row.name))
+  const names = new Set((info.rows as unknown as { name: string }[]).map((row) => row.name))
 
   if (!names.has('name')) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`name\` text`)

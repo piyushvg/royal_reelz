@@ -33,7 +33,7 @@ const dirname = path.dirname(filename)
 /** Production DB predates the name/role columns. Login SELECTs them and 500s if they are absent. */
 async function ensureUserColumns(payload: Payload) {
   const info = await payload.db.drizzle.run(sql`PRAGMA table_info(users)`)
-  const names = new Set((info.rows as { name: string }[]).map((row) => row.name))
+  const names = new Set((info.rows as unknown as { name: string }[]).map((row) => row.name))
 
   if (!names.has('name')) {
     await payload.db.drizzle.run(sql`ALTER TABLE \`users\` ADD \`name\` text`)
