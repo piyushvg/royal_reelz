@@ -4,12 +4,12 @@ import React, { useState } from 'react'
 
 /**
  * List view me chhota thumbnail.
- *  1) CMS me upload ki hui image  2) path wali image (website ke images folder se)  3) filename / "No image".
+ *  1) CMS me upload ki hui image  2) path wali image (CMS ke public folder se)  3) filename / "No image".
  *
- * Path wali images website ke folder se aati hain. Website ka URL yahan set karo
- * (ya .env me NEXT_PUBLIC_SITE_URL):
+ * Website ab isi server se chalti hai, isliye path wali image seedhe "/images/..." se aati hai.
+ * Alag server par ho to .env me NEXT_PUBLIC_SITE_URL daalo.
  */
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'http://127.0.0.1:5500/royal_reelz/').replace(/\/?$/, '/')
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || '/').replace(/\/?$/, '/')
 
 const pick = (row: any, keys: string[]) => {
   for (const key of keys) {

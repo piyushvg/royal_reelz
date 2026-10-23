@@ -1,6 +1,6 @@
 import { htmlResponse } from '../html/render'
 
-const pages = new Set(['index.html', 'about.html', 'gallery.html', 'videos.html', 'contact.html'])
+const pages = new Set(['index.html', 'about.html', 'gallery.html', 'videos.html', 'contact.html', 'portal.html'])
 
 type Args = { params: Promise<{ page: string }> }
 

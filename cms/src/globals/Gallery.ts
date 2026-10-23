@@ -1,11 +1,15 @@
 import type { GlobalConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
+import { siteURL } from '../preview'
 
 export const Gallery: GlobalConfig = {
   slug: 'gallery',
   label: 'Gallery text',
-  admin: { group: 'Gallery' },
+  admin: {
+    preview: () => siteURL('gallery.html'),
+    group: 'Gallery',
+  },
   access: { read: publicRead, update: isLoggedIn },
   fields: [
     { name: 'eyebrow', label: 'Small line', type: 'text', required: true },

@@ -2,11 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
 import { orderField } from '../fields'
+import { siteURL } from '../preview'
 
 export const Videos: CollectionConfig = {
   slug: 'videos',
   labels: { singular: 'Trailer video', plural: 'Trailer videos' },
   admin: {
+    preview: () => siteURL('videos.html'),
     useAsTitle: 'title',
     defaultColumns: ['title', 'youtubeUrl', 'order'],
     group: 'Videos',

@@ -2,11 +2,15 @@ import type { GlobalConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
 import { uploadOrPath } from '../fields'
+import { siteURL } from '../preview'
 
 export const Destinations: GlobalConfig = {
   slug: 'destinations',
   label: 'Destinations text',
-  admin: { group: 'Destinations' },
+  admin: {
+    preview: () => siteURL('index.html#destinations'),
+    group: 'Destinations',
+  },
   access: { read: publicRead, update: isLoggedIn },
   fields: [
     { name: 'eyebrow', label: 'Small line', type: 'text', required: true },

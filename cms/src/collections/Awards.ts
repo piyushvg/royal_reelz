@@ -2,11 +2,13 @@ import type { CollectionConfig } from 'payload'
 
 import { isLoggedIn, publicRead } from '../access'
 import { orderField } from '../fields'
+import { siteURL } from '../preview'
 
 export const Awards: CollectionConfig = {
   slug: 'awards',
   labels: { singular: 'Award', plural: 'Awards' },
   admin: {
+    preview: () => siteURL('index.html#about'),
     useAsTitle: 'line1',
     defaultColumns: ['line1', 'line2', 'years', 'order'],
     group: 'About',
