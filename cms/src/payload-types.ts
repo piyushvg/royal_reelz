@@ -78,6 +78,7 @@ export interface Config {
     team: Team;
     videos: Video;
     enquiries: Enquiry;
+    'customer-files': CustomerFile;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -96,6 +97,7 @@ export interface Config {
     team: TeamSelect<false> | TeamSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    'customer-files': CustomerFilesSelect<false> | CustomerFilesSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -148,11 +150,15 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Admin = poora access. Editor = website content manage kar sakta hai (users nahi). Customer = sirf website ke Client Login se apni photos / videos dekhta hai.
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  name?: string | null;
+  role?: ('admin' | 'editor' | 'customer') | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -408,6 +414,54 @@ export interface Enquiry {
   createdAt: string;
 }
 /**
+ * Customer chuno, phir photo / video upload karo ya video ka link paste karo. Customer ko sirf apni files dikhti hain.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-files".
+ */
+export interface CustomerFile {
+  id: number;
+  /**
+   * Sirf "Customer" role wale users yahan dikhte hain. Pehle Users me customer banao.
+   */
+  customer: number | User;
+  title: string;
+  /**
+   * YouTube (unlisted), Vimeo ya koi bhi link. Video file upload karni ho to ye khaali chhodo.
+   */
+  videoUrl?: string | null;
+  /**
+   * Full-quality files ka Google Drive / WeTransfer link.
+   */
+  downloadUrl?: string | null;
+  note?: string | null;
+  /**
+   * Lower numbers appear first on the website.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -474,6 +528,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'enquiries';
         value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'customer-files';
+        value: number | CustomerFile;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -522,6 +580,8 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  role?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -689,6 +749,43 @@ export interface EnquiriesSelect<T extends boolean = true> {
   status?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-files_select".
+ */
+export interface CustomerFilesSelect<T extends boolean = true> {
+  customer?: T;
+  title?: T;
+  videoUrl?: T;
+  downloadUrl?: T;
+  note?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

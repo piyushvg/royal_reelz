@@ -96,25 +96,28 @@ export default buildConfig({
   onInit: async (payload) => {
     await seedIfEmpty(payload)
 
-    // Purane users (role ke bina) ko admin bana do, taaki koi lock na ho.
+    // Role column add hote hi purana owner "customer" ban gaya tha,
+    // isliye admin panel login reject ho raha tha.
     try {
-      const legacy = await payload.find({
+      const adminEmail = (process.env.ADMIN_EMAIL || 'admin@royalreelz.com').toLowerCase()
+      const owners = await payload.find({
         collection: 'users',
-        where: { role: { exists: false } } as any,
-        limit: 100,
+        where: { email: { equals: adminEmail } },
+        limit: 1,
         depth: 0,
         overrideAccess: true,
       })
-      for (const user of legacy.docs) {
+      const owner = owners.docs[0]
+      if (owner && owner.role !== 'admin') {
         await payload.update({
           collection: 'users',
-          id: user.id,
+          id: owner.id,
           data: { role: 'admin' } as any,
           overrideAccess: true,
         })
       }
     } catch (err) {
-      payload.logger.warn({ err }, 'Could not backfill user roles')
+      payload.logger.warn({ err }, 'Could not restore the admin role')
     }
   },
 })
