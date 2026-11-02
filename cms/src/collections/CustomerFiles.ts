@@ -1,7 +1,7 @@
 import { APIError } from 'payload'
 import type { CollectionConfig } from 'payload'
 
-import { isLoggedIn, isStaffUser } from '../access'
+import { isLoggedIn, isStaffUser, isSubscriptionActive } from '../access'
 import { orderField } from '../fields'
 import { siteURL } from '../preview'
 
@@ -25,6 +25,8 @@ export const CustomerFiles: CollectionConfig = {
     read: ({ req: { user } }) => {
       if (!user) return false
       if (isStaffUser(user as any)) return true
+      // subscription khatam => customer ko files nahi milengi (list bhi nahi, file download bhi nahi)
+      if (!isSubscriptionActive(user)) return false
       return { customer: { equals: user.id } }
     },
     create: isLoggedIn,

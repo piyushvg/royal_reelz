@@ -15,6 +15,12 @@ export const isStaffUser = (user: MaybeUser) =>
   Boolean(user) && (user!.role === 'admin' || user!.role === 'editor' || !user!.role)
 export const isCustomerUser = (user: MaybeUser) => Boolean(user) && user!.role === 'customer'
 
+/** Customer ki 1-saal ki subscription abhi chalu hai? (subscriptionEnd aaj ke baad ho) */
+export const isSubscriptionActive = (user: any) => {
+  const end = user?.subscriptionEnd ? new Date(user.subscriptionEnd).getTime() : 0
+  return end > Date.now()
+}
+
 export const publicRead: Access = () => true
 
 /**

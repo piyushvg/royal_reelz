@@ -87,3 +87,12 @@
   .portal-bar { flex-direction: column; align-items: flex-start; }
 }
 @media (max-width: 480px) { .portal-grid { column-count: 1; } }
+
+/* OTP + subscription */
+.portal-code { text-align: center; font-size: 1.6rem; letter-spacing: 0.5em; padding-left: 0.5em; font-variant-numeric: tabular-nums; }
+.portal-row { display: flex; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.portal-row .portal-link:disabled { opacity: 0.45; cursor: default; }
+.portal-sent strong { color: var(--ink, inherit); word-break: break-all; }
+.portal-card-title { font-family: 'Bodoni Moda', serif; font-weight: 500; font-size: 1.5rem; margin: 0 0 0.75rem; }
+.portal-plan { margin: 0 0 1.5rem; padding: 0.75rem 1rem; border: 1px solid var(--gold-soft, #d9c9a3); font-size: 12px; letter-spacing: 0.08em; color: var(--on-surface-variant); }
+.portal-plan.is-warn { border-color: #b4532a; color: #8a3a16; background: rgba(180, 83, 42, 0.06); }

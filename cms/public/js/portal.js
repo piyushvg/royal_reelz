@@ -7,6 +7,7 @@
 
   var API = window.location.origin + '/api';
   var state = { photos: [], videos: [] };
+  var otp = { email: '', timer: null };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -25,9 +26,10 @@
     return fetch(API + path, options).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) {
-          var msg = (data.errors && data.errors[0] && data.errors[0].message) || data.message || 'Something went wrong.';
+          var msg = data.error || (data.errors && data.errors[0] && data.errors[0].message) || data.message || 'Something went wrong.';
           var err = new Error(msg);
           err.status = res.status;
+          err.data = data;
           throw err;
         }
         return data;
@@ -39,6 +41,7 @@
   function showOnly(which) {
     show('portal-loading', which === 'loading');
     show('portal-login', which === 'login');
+    show('portal-expired', which === 'expired');
     show('portal-staff', which === 'staff');
     show('portal-area', which === 'area');
   }
@@ -47,7 +50,8 @@
 
   function routeUser(user) {
     if (!user) {
-      setLede('Sign in to view your own wedding photos and videos.');
+      setLede('Sign in with a one-time code to view your own wedding photos and videos.');
+      resetOtp();
       showOnly('login');
       return;
     }
@@ -56,10 +60,40 @@
       showOnly('staff');
       return;
     }
+    if (!subActive(user)) { showExpired(user.subscriptionEnd); return; }
     setLede('Your celebration, all in one place.');
+    showPlan(user.subscriptionEnd);
     $('#portal-hello').textContent = 'Welcome, ' + (user.name || user.email);
     showOnly('area');
     loadFiles();
+  }
+
+  /* ------------------------------------------------- subscription */
+  function subActive(user) {
+    return !!(user && user.subscriptionEnd && new Date(user.subscriptionEnd).getTime() > Date.now());
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return ''; }
+  }
+  function showPlan(iso) {
+    var el = $('#portal-plan');
+    if (!el || !iso) return;
+    var days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+    var txt = 'Access valid till ' + fmtDate(iso) + ' · ' + days + ' day' + (days === 1 ? '' : 's') + ' left';
+    if (days <= 30) txt += ' — contact us to renew.';
+    el.textContent = txt;
+    el.classList.toggle('is-warn', days <= 30);
+    el.hidden = false;
+  }
+  function showExpired(iso) {
+    setLede('Your gallery access has ended.');
+    var t = $('#expired-text');
+    if (t) t.textContent = iso
+      ? 'Your one-year gallery access ended on ' + fmtDate(iso) + '. Please contact us to renew it.'
+      : 'Your one-year gallery access has expired. Please contact us to renew it.';
+    api('/users/logout', { method: 'POST' }).catch(function () {});
+    showOnly('expired');
   }
 
   /* ------------------------------------------------------- files */
@@ -84,7 +118,8 @@
       });
       render();
     }).catch(function (err) {
-      if (err.status === 401 || err.status === 403) { routeUser(null); return; }
+      if (err.status === 403) { showExpired(null); return; }
+      if (err.status === 401) { routeUser(null); return; }
       $('#portal-sub').textContent = 'Could not load your files. Please refresh.';
     });
   }
@@ -225,39 +260,86 @@
     }
   });
 
-  var form = document.getElementById('portal-form');
-  if (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var err = $('#portal-error');
-      var btn = $('#portal-submit');
-      err.hidden = true;
-      var email = form.elements.email.value.trim();
-      var password = form.elements.password.value;
-      if (!email || !password) {
-        err.textContent = 'Please enter your email and password.';
-        err.hidden = false;
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-      api('/users/login', { method: 'POST', body: JSON.stringify({ email: email, password: password }) })
-        .then(function (data) {
-          form.reset();
-          routeUser(data.user);
-        })
-        .catch(function (error) {
-          err.textContent = error.status === 401 || error.status === 400
-            ? 'Email or password is incorrect.'
-            : error.message;
-          err.hidden = false;
-        })
-        .then(function () {
-          btn.disabled = false;
-          btn.textContent = 'Sign in';
-        });
-    });
+  /* ----------------------------------------------------- OTP login */
+  function msg(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || '';
+    el.hidden = !text;
   }
+  function resetOtp() {
+    clearInterval(otp.timer);
+    show('otp-email-form', true);
+    show('otp-code-form', false);
+    msg('portal-error', ''); msg('otp-error', '');
+    var c = document.getElementById('pl-code'); if (c) c.value = '';
+  }
+  function countdown(sec) {
+    var b = document.getElementById('otp-resend');
+    clearInterval(otp.timer);
+    function tick() {
+      if (sec <= 0) { clearInterval(otp.timer); b.disabled = false; b.textContent = 'Resend code'; return; }
+      b.disabled = true; b.textContent = 'Resend in ' + sec + 's'; sec--;
+    }
+    tick();
+    otp.timer = setInterval(tick, 1000);
+  }
+  function sendCode(btn, label, errId) {
+    msg(errId, '');
+    btn.disabled = true;
+    btn.textContent = 'Sending…';
+    return api('/otp/request', { method: 'POST', body: JSON.stringify({ email: otp.email }) })
+      .then(function (d) {
+        show('otp-email-form', false);
+        show('otp-code-form', true);
+        $('#otp-sent-to').textContent = otp.email;
+        msg('otp-error', '');
+        countdown(d.resendIn || 60);
+        var c = document.getElementById('pl-code'); c.value = ''; c.focus();
+        return true;
+      })
+      .catch(function (e) {
+        if (e.status === 429 && errId === 'otp-error') countdown(60);
+        msg(errId, e.message);
+        return false;
+      })
+      .then(function (ok) { btn.textContent = label; if (btn.id !== 'otp-resend') btn.disabled = false; return ok; });
+  }
+
+  var emailForm = document.getElementById('otp-email-form');
+  if (emailForm) emailForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var email = emailForm.elements.email.value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg('portal-error', 'Please enter a valid email address.'); return; }
+    otp.email = email;
+    sendCode($('#portal-submit'), 'Send OTP', 'portal-error');
+  });
+
+  var codeForm = document.getElementById('otp-code-form');
+  if (codeForm) {
+    codeForm.elements.code.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+    codeForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = codeForm.elements.code.value;
+      var btn = $('#otp-submit');
+      if (code.length !== 6) { msg('otp-error', 'Enter the 6-digit code.'); return; }
+      msg('otp-error', '');
+      btn.disabled = true; btn.textContent = 'Verifying…';
+      api('/otp/verify', { method: 'POST', body: JSON.stringify({ email: otp.email, code: code }) })
+        .then(function (d) { clearInterval(otp.timer); routeUser(d.user); })
+        .catch(function (err) {
+          if (err.status === 403) { showExpired(err.data && err.data.subscriptionEnd); return; }
+          msg('otp-error', err.message);
+        })
+        .then(function () { btn.disabled = false; btn.textContent = 'Verify & sign in'; });
+    });
+    $('#otp-resend').addEventListener('click', function () { sendCode(this, 'Resend code', 'otp-error'); });
+    $('#otp-change').addEventListener('click', resetOtp);
+  }
+  var back = document.getElementById('expired-back');
+  if (back) back.addEventListener('click', function () { routeUser(null); });
 
   /* -------------------------------------------------------- start */
   api('/users/me').then(function (data) { routeUser(data.user || null); })
