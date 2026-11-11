@@ -2,9 +2,12 @@ import { createHmac, randomBytes, randomInt, timingSafeEqual } from 'crypto'
 import type { Endpoint, Payload } from 'payload'
 
 /**
- * Customer OTP login (passwordless)
- *   POST /api/otp/request  { email }        -> email par 6-digit code bhejta hai
- *   POST /api/otp/verify   { email, code }  -> code sahi + subscription chalu => login cookie set
+ * Customer OTP login (passwordless) - MOBILE NUMBER ya EMAIL se
+ *   POST /api/otp/request  { identifier }        -> code bhejta hai (identifier = mobile number ya email)
+ *   POST /api/otp/verify   { identifier, code }  -> code sahi + subscription chalu => login cookie set
+ *
+ * ABHI KE LIYE: SMS provider nahi hai, isliye sabhi mobile numbers ka OTP fixed "123456" hai.
+ * Real OTP chalu karne ke liye .env me  OTP_STATIC_CODE=off  daalo (phir email par random code jayega).
  *
  * Security:
  *  - code sirf HMAC hash ke roop me DB me; 10 minute me expire; max 5 galat try; ek baar use
@@ -18,11 +21,29 @@ const RESEND_GAP_MS = 60 * 1000
 const MAX_PER_HOUR = 5
 const MAX_ATTEMPTS = 5
 
+/** '' / 'off' => real random OTP. Default => 123456 (testing). */
+const STATIC_RAW = process.env.OTP_STATIC_CODE
+const STATIC_CODE = STATIC_RAW === undefined ? '123456' : STATIC_RAW === '' || STATIC_RAW.toLowerCase() === 'off' ? '' : STATIC_RAW
+
 const noStore = { 'Cache-Control': 'no-store' }
 const json = (body: unknown, status = 200, headers: Record<string, string> = {}) =>
   Response.json(body, { status, headers: { ...noStore, ...headers } })
 
 const isEmail = (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)
+
+/** mobile number -> sirf aakhri 10 digit (+91, 0, space, dash sab hata deta hai) */
+const normalizePhone = (v: string) => v.replace(/\D/g, '').slice(-10)
+
+/** 'a@b.com' ya '9322451778' -> { key, email?, phone? } ; galat ho to null */
+function parseIdentifier(raw: unknown) {
+  const v = String(raw ?? '').trim().slice(0, 200)
+  if (v.includes('@')) {
+    const email = v.toLowerCase()
+    return isEmail(email) ? { key: email, email } : null
+  }
+  const phone = normalizePhone(v)
+  return phone.length === 10 ? { key: `tel:${phone}`, phone } : null
+}
 
 async function readBody(req: any): Promise<Record<string, unknown>> {
   try {
@@ -43,10 +64,12 @@ function safeEqual(a: string, b: string) {
   return x.length === y.length && timingSafeEqual(x, y)
 }
 
-async function findCustomer(payload: Payload, email: string) {
+async function findCustomer(payload: Payload, id: { email?: string; phone?: string }) {
   const res = await payload.find({
     collection: 'users',
-    where: { and: [{ email: { equals: email } }, { role: { equals: 'customer' } }] } as any,
+    where: {
+      and: [id.email ? { email: { equals: id.email } } : { phone: { equals: id.phone } }, { role: { equals: 'customer' } }],
+    } as any,
     limit: 1,
     depth: 0,
     overrideAccess: true,
@@ -101,8 +124,9 @@ export const otpRequestEndpoint: Endpoint = {
   handler: async (req) => {
     const payload = req.payload
     const body = await readBody(req)
-    const email = String(body.email ?? '').trim().toLowerCase().slice(0, 200)
-    if (!isEmail(email)) return json({ error: 'Please enter a valid email address.' }, 400)
+    const id = parseIdentifier(body.identifier ?? body.email ?? body.phone)
+    if (!id) return json({ error: 'Please enter a valid 10-digit mobile number or email.' }, 400)
+    const email = id.key // OTP record ki key (email ya tel:XXXXXXXXXX)
 
     const now = Date.now()
 
@@ -116,32 +140,38 @@ export const otpRequestEndpoint: Endpoint = {
       overrideAccess: true,
     })
     const last = recent.docs[0] as any
-    if (last) {
+    if (last && !STATIC_CODE) {
       const wait = RESEND_GAP_MS - (now - new Date(last.createdAt).getTime())
       if (wait > 0) {
         return json({ error: 'Please wait before requesting another code.', retryAfter: Math.ceil(wait / 1000) }, 429)
       }
     }
-    if (recent.docs.length >= MAX_PER_HOUR) {
+    if (!STATIC_CODE && recent.docs.length >= MAX_PER_HOUR) {
       return json({ error: 'Too many requests. Please try again in an hour.', retryAfter: 3600 }, 429)
     }
 
     // code hamesha banta hai (unknown email par bhi) -> response/time se pata nahi chalta
-    const code = String(randomInt(0, 1_000_000)).padStart(6, '0')
+    const code = STATIC_CODE || String(randomInt(0, 1_000_000)).padStart(6, '0')
     await payload.create({
       collection: 'login-otps',
       overrideAccess: true,
       data: { email, codeHash: hashCode(email, code), expiresAt: new Date(now + OTP_TTL_MS).toISOString(), attempts: 0 } as any,
     })
 
-    const customer = await findCustomer(payload, email)
-    if (customer) {
-      try {
-        await sendOtpEmail(payload, email, customer.name || '', code)
-      } catch (err) {
-        payload.logger.error({ err }, 'OTP email send failed')
+    if (STATIC_CODE) {
+      // testing mode: koi email / SMS nahi, code fixed hai
+      payload.logger.info(`[OTP] static code mode ON for ${email}`)
+    } else {
+      const customer = await findCustomer(payload, id)
+      if (customer) {
+        try {
+          // mobile se login karne par bhi code customer ki email par jata hai (SMS provider baad me jodenge)
+          await sendOtpEmail(payload, customer.email, customer.name || '', code)
+        } catch (err) {
+          payload.logger.error({ err }, 'OTP email send failed')
+        }
+        if (process.env.NODE_ENV !== 'production') payload.logger.info(`[DEV] OTP for ${email}: ${code}`)
       }
-      if (process.env.NODE_ENV !== 'production') payload.logger.info(`[DEV] OTP for ${email}: ${code}`)
     }
 
     // purane (1 din se purane) OTP records saaf karo
@@ -164,9 +194,10 @@ export const otpVerifyEndpoint: Endpoint = {
   handler: async (req) => {
     const payload = req.payload
     const body = await readBody(req)
-    const email = String(body.email ?? '').trim().toLowerCase().slice(0, 200)
+    const id = parseIdentifier(body.identifier ?? body.email ?? body.phone)
     const code = String(body.code ?? '').replace(/\D/g, '').slice(0, 6)
-    if (!isEmail(email) || code.length !== 6) return json({ error: 'Enter the 6-digit code.' }, 400)
+    if (!id || code.length !== 6) return json({ error: 'Enter the 6-digit code.' }, 400)
+    const email = id.key
 
     const nowISO = new Date().toISOString()
     const found = await payload.find({
@@ -199,8 +230,8 @@ export const otpVerifyEndpoint: Endpoint = {
     // code sahi - ek baar hi chalega
     await payload.update({ collection: 'login-otps', id: otp.id, data: { usedAt: nowISO } as any, overrideAccess: true })
 
-    const customer = await findCustomer(payload, email)
-    if (!customer) return json({ error: 'No client account found for this email.', code: 'no_account' }, 404)
+    const customer = await findCustomer(payload, id)
+    if (!customer) return json({ error: 'No client account found for this mobile number / email.', code: 'no_account' }, 404)
 
     // 1-saal subscription check
     const end = customer.subscriptionEnd ? new Date(customer.subscriptionEnd) : null
@@ -219,7 +250,7 @@ export const otpVerifyEndpoint: Endpoint = {
     // phir Payload ka apna login chalate hain -> sahi JWT + cookie.
     const password = randomBytes(24).toString('hex')
     await payload.update({ collection: 'users', id: customer.id, data: { password } as any, overrideAccess: true })
-    const session: any = await payload.login({ collection: 'users', data: { email, password } })
+    const session: any = await payload.login({ collection: 'users', data: { email: customer.email, password } })
     if (!session?.token) return json({ error: 'Could not sign you in. Please try again.' }, 500)
 
     const maxAge = Math.max(60, Math.min(Math.floor((session.exp ?? Date.now() / 1000 + 604800) - Date.now() / 1000), 60 * 60 * 24 * 7))
@@ -242,6 +273,7 @@ export const otpVerifyEndpoint: Endpoint = {
         user: {
           id: u.id,
           email: u.email,
+          phone: customer.phone || '',
           name: u.name || '',
           role: u.role,
           subscriptionStart: customer.subscriptionStart || null,

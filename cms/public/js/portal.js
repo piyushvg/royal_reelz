@@ -1,5 +1,5 @@
-/* Royal Reelz — Client Login portal
-   Customer login karke sirf apni photos / videos dekhta hai.
+/* Royal Reelz — Client Login portal (mobile / email OTP)
+   Customer OTP se login karke sirf apni photos / videos dekhta hai.
    Payload ke cookie-login (/api/users/login) par chalta hai, isliye ye page
    usi server se khulna chahiye jahan CMS chal raha hai. */
 (function () {
@@ -7,7 +7,7 @@
 
   var API = window.location.origin + '/api';
   var state = { photos: [], videos: [] };
-  var otp = { email: '', timer: null };
+  var otp = { id: '', timer: null };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -47,28 +47,13 @@
   }
 
   function setLede(text) { var el = $('#portal-lede'); if (el) el.textContent = text; }
-
-  function routeUser(user) {
-    if (!user) {
-      setLede('Sign in with a one-time code to view your own wedding photos and videos.');
-      resetOtp();
-      showOnly('login');
-      return;
-    }
-    if (user.role !== 'customer') {
-      setLede('You are signed in.');
-      showOnly('staff');
-      return;
-    }
-    if (!subActive(user)) { showExpired(user.subscriptionEnd); return; }
-    setLede('Your celebration, all in one place.');
-    showPlan(user.subscriptionEnd);
-    $('#portal-hello').textContent = 'Welcome, ' + (user.name || user.email);
-    showOnly('area');
-    loadFiles();
+  function setHeading(a, b) {
+    var x = $('#portal-h1a'), y = $('#portal-h1b');
+    if (x) x.textContent = a;
+    if (y) y.textContent = b;
+    document.title = a + ' ' + b + ' \u2014 Royal Reelz';
   }
 
-  /* ------------------------------------------------- subscription */
   function subActive(user) {
     return !!(user && user.subscriptionEnd && new Date(user.subscriptionEnd).getTime() > Date.now());
   }
@@ -80,13 +65,14 @@
     var el = $('#portal-plan');
     if (!el || !iso) return;
     var days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
-    var txt = 'Access valid till ' + fmtDate(iso) + ' · ' + days + ' day' + (days === 1 ? '' : 's') + ' left';
-    if (days <= 30) txt += ' — contact us to renew.';
+    var txt = 'Access valid till ' + fmtDate(iso) + ' \u00b7 ' + days + ' day' + (days === 1 ? '' : 's') + ' left';
+    if (days <= 30) txt += ' \u2014 contact us to renew.';
     el.textContent = txt;
     el.classList.toggle('is-warn', days <= 30);
     el.hidden = false;
   }
   function showExpired(iso) {
+    setHeading('Client', 'Login');
     setLede('Your gallery access has ended.');
     var t = $('#expired-text');
     if (t) t.textContent = iso
@@ -94,6 +80,31 @@
       : 'Your one-year gallery access has expired. Please contact us to renew it.';
     api('/users/logout', { method: 'POST' }).catch(function () {});
     showOnly('expired');
+  }
+
+  function routeUser(user) {
+    document.body.classList.toggle('is-signed-in', !!(user && user.role === 'customer' && subActive(user)));
+    if (!user) {
+      setHeading('Client', 'Login');
+      setLede('Sign in with a one-time password to view your own wedding photos and videos.');
+      resetOtp();
+      showOnly('login');
+      return;
+    }
+    if (user.role !== 'customer') {
+      setHeading('Client', 'Login');
+      setLede('You are signed in.');
+      showOnly('staff');
+      return;
+    }
+    if (!subActive(user)) { showExpired(user.subscriptionEnd); return; }
+    // login ho gaya => "Client Login" heading hata do, "My Gallery" dikhao
+    setHeading('My', 'Gallery');
+    setLede('Your celebration, all in one place.');
+    showPlan(user.subscriptionEnd);
+    $('#portal-hello').textContent = 'Welcome, ' + (user.name || user.phone || user.email);
+    showOnly('area');
+    loadFiles();
   }
 
   /* ------------------------------------------------------- files */
@@ -104,6 +115,22 @@
   function vimeoId(url) {
     var m = String(url || '').match(/vimeo\.com\/(?:video\/)?(\d+)/);
     return m ? m[1] : '';
+  }
+
+  /* Payload kabhi absolute URL (http://localhost:9007/...) deta hai jo cookie ke bina fail hota hai.
+     Isliye hamesha is page ke apne origin se /api/customer-files/file/<filename> banate hain. */
+  function fileSrc(f, size) {
+    var name = (size && f.sizes && f.sizes[size] && f.sizes[size].filename) || f.filename;
+    if (name) return '/api/customer-files/file/' + encodeURIComponent(name);
+    var u = (size && f.sizes && f.sizes[size] && f.sizes[size].url) || f.url || '';
+    try { var x = new URL(u, window.location.origin); return x.pathname + x.search; } catch (e) { return u; }
+  }
+  function imgFallback(img) {
+    // thumbnail na bane ho to full image par aa jao
+    img.addEventListener('error', function () {
+      var full = img.getAttribute('data-full');
+      if (full && img.getAttribute('src') !== full) img.setAttribute('src', full);
+    });
   }
 
   function loadFiles() {
@@ -125,7 +152,7 @@
   }
 
   function dlLink(f) {
-    var href = f.downloadUrl || (f.url && f.mimeType ? f.url : '');
+    var href = f.downloadUrl || (f.filename && f.mimeType ? fileSrc(f) : '');
     if (!href) return '';
     var own = !f.downloadUrl;
     return '<a class="portal-dl" href="' + esc(href) + '"' +
@@ -133,18 +160,17 @@
   }
 
   function photoCard(f, i) {
-    var thumb = (f.sizes && f.sizes.thumbnail && f.sizes.thumbnail.url) || f.url;
     return '<figure class="portal-photo">' +
       '<button type="button" class="portal-open" data-i="' + i + '" aria-label="Open ' + esc(f.title) + '">' +
-      '<img src="' + esc(thumb) + '" alt="' + esc(f.title) + '" loading="lazy"></button>' +
+      '<img src="' + esc(fileSrc(f, 'thumbnail')) + '" data-full="' + esc(fileSrc(f)) + '" alt="' + esc(f.title) + '" loading="lazy"></button>' +
       '<figcaption><span>' + esc(f.title) + '</span>' + dlLink(f) + '</figcaption></figure>';
   }
 
   function videoCard(f) {
     var media;
     var mime = f.mimeType || '';
-    if (mime.indexOf('video/') === 0 && f.url) {
-      media = '<video controls playsinline preload="metadata" src="' + esc(f.url) + '"></video>';
+    if (mime.indexOf('video/') === 0 && f.filename) {
+      media = '<video controls playsinline preload="metadata" src="' + esc(fileSrc(f)) + '"></video>';
     } else if (youtubeId(f.videoUrl)) {
       media = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(youtubeId(f.videoUrl)) +
         '?rel=0" title="' + esc(f.title) + '" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>';
@@ -164,6 +190,7 @@
     $('#count-photos').textContent = state.photos.length;
     $('#count-videos').textContent = state.videos.length;
     $('#grid-photos').innerHTML = state.photos.map(photoCard).join('');
+    $$('#grid-photos img').forEach(imgFallback);
     $('#grid-videos').innerHTML = state.videos.map(videoCard).join('');
     show('empty-photos', !state.photos.length);
     show('empty-videos', !state.videos.length);
@@ -227,7 +254,7 @@
     if (!n) return;
     cur = (i + n) % n;
     var f = state.photos[cur];
-    lb.querySelector('img').src = f.url;
+    lb.querySelector('img').src = fileSrc(f);
     lb.querySelector('img').alt = f.title || '';
     lb.querySelector('.portal-lb-c').textContent = (cur + 1) + ' / ' + n + (f.title ? '  ·  ' + f.title : '');
   }
@@ -269,7 +296,7 @@
   }
   function resetOtp() {
     clearInterval(otp.timer);
-    show('otp-email-form', true);
+    show('otp-id-form', true);
     show('otp-code-form', false);
     msg('portal-error', ''); msg('otp-error', '');
     var c = document.getElementById('pl-code'); if (c) c.value = '';
@@ -278,40 +305,49 @@
     var b = document.getElementById('otp-resend');
     clearInterval(otp.timer);
     function tick() {
-      if (sec <= 0) { clearInterval(otp.timer); b.disabled = false; b.textContent = 'Resend code'; return; }
+      if (sec <= 0) { clearInterval(otp.timer); b.disabled = false; b.textContent = 'Resend OTP'; return; }
       b.disabled = true; b.textContent = 'Resend in ' + sec + 's'; sec--;
     }
     tick();
     otp.timer = setInterval(tick, 1000);
   }
+  function validId(v) {
+    v = String(v || '').trim();
+    if (v.indexOf('@') > -1) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    return v.replace(/\D/g, '').length >= 10;
+  }
   function sendCode(btn, label, errId) {
     msg(errId, '');
     btn.disabled = true;
-    btn.textContent = 'Sending…';
-    return api('/otp/request', { method: 'POST', body: JSON.stringify({ email: otp.email }) })
+    btn.textContent = 'Sending\u2026';
+    return api('/otp/request', { method: 'POST', body: JSON.stringify({ identifier: otp.id }) })
       .then(function (d) {
-        show('otp-email-form', false);
+        show('otp-id-form', false);
         show('otp-code-form', true);
-        $('#otp-sent-to').textContent = otp.email;
+        $('#otp-sent-to').textContent = otp.id;
         msg('otp-error', '');
         countdown(d.resendIn || 60);
         var c = document.getElementById('pl-code'); c.value = ''; c.focus();
         return true;
       })
       .catch(function (e) {
-        if (e.status === 429 && errId === 'otp-error') countdown(60);
+        if (e.status === 429 && errId === 'otp-error') countdown((e.data && e.data.retryAfter) || 60);
         msg(errId, e.message);
         return false;
       })
-      .then(function (ok) { btn.textContent = label; if (btn.id !== 'otp-resend') btn.disabled = false; return ok; });
+      .then(function (ok) {
+        if (btn.id !== 'otp-resend') { btn.textContent = label; btn.disabled = false; }
+        else if (!ok) { btn.textContent = label; }
+        return ok;
+      });
   }
 
-  var emailForm = document.getElementById('otp-email-form');
-  if (emailForm) emailForm.addEventListener('submit', function (e) {
+  var idForm = document.getElementById('otp-id-form');
+  if (idForm) idForm.addEventListener('submit', function (e) {
     e.preventDefault();
-    var email = emailForm.elements.email.value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { msg('portal-error', 'Please enter a valid email address.'); return; }
-    otp.email = email;
+    var v = idForm.elements.identifier.value.trim();
+    if (!validId(v)) { msg('portal-error', 'Please enter a valid 10-digit mobile number.'); return; }
+    otp.id = v;
     sendCode($('#portal-submit'), 'Send OTP', 'portal-error');
   });
 
@@ -324,10 +360,10 @@
       e.preventDefault();
       var code = codeForm.elements.code.value;
       var btn = $('#otp-submit');
-      if (code.length !== 6) { msg('otp-error', 'Enter the 6-digit code.'); return; }
+      if (code.length !== 6) { msg('otp-error', 'Enter the 6-digit OTP.'); return; }
       msg('otp-error', '');
-      btn.disabled = true; btn.textContent = 'Verifying…';
-      api('/otp/verify', { method: 'POST', body: JSON.stringify({ email: otp.email, code: code }) })
+      btn.disabled = true; btn.textContent = 'Verifying\u2026';
+      api('/otp/verify', { method: 'POST', body: JSON.stringify({ identifier: otp.id, code: code }) })
         .then(function (d) { clearInterval(otp.timer); routeUser(d.user); })
         .catch(function (err) {
           if (err.status === 403) { showExpired(err.data && err.data.subscriptionEnd); return; }
@@ -335,7 +371,7 @@
         })
         .then(function () { btn.disabled = false; btn.textContent = 'Verify & sign in'; });
     });
-    $('#otp-resend').addEventListener('click', function () { sendCode(this, 'Resend code', 'otp-error'); });
+    $('#otp-resend').addEventListener('click', function () { sendCode(this, 'Resend OTP', 'otp-error'); });
     $('#otp-change').addEventListener('click', resetOtp);
   }
   var back = document.getElementById('expired-back');

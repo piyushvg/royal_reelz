@@ -1,9 +1,13 @@
+import { APIError } from 'payload'
 import type { CollectionConfig } from 'payload'
 
 import { isAdminUser, isStaffUser } from '../access'
 
 const staffOnly = ({ req }: { req: { user?: unknown } }) => isStaffUser(req.user as any)
 const isCustomerDoc = (siblingData: any, data: any) => (data?.role ?? siblingData?.role) === 'customer'
+
+/** mobile -> sirf aakhri 10 digit */
+const normalizePhone = (v: unknown) => String(v ?? '').replace(/\D/g, '').slice(-10)
 
 function addOneYear(from: Date) {
   const d = new Date(from.getTime())
@@ -16,7 +20,7 @@ export const Users: CollectionConfig = {
   labels: { singular: 'User', plural: 'Users' },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['email', 'name', 'role', 'subscriptionEnd', 'updatedAt'],
+    defaultColumns: ['email', 'name', 'phone', 'role', 'subscriptionEnd', 'updatedAt'],
     group: 'Settings',
     description:
       'Admin = poora access. Editor = website content + customers manage kar sakta hai. Customer = website ke Client Login se OTP dwara apni photos / videos dekhta hai (1 saal ki subscription).',
@@ -40,8 +44,8 @@ export const Users: CollectionConfig = {
     },
     read: ({ req: { user } }) => {
       if (!user) return false
-      if (isAdminUser(user as any)) return true
-      if (isStaffUser(user as any)) return { or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }] }
+      // staff (admin + editor) list me sabko dekh sakta hai (admin users bhi)
+      if (isStaffUser(user as any)) return true
       return { id: { equals: user.id } }
     },
     update: ({ req: { user } }) => {
@@ -67,7 +71,28 @@ export const Users: CollectionConfig = {
           d.role = 'customer'
         }
 
-        const role = d.role ?? prev.role
+        const role = d.role ?? prev.role ?? (operation === 'create' ? 'customer' : undefined)
+
+        // ---- mobile number: 10 digit, customer ke liye zaroori, duplicate nahi ----
+        if (operation === 'create' || 'phone' in d) {
+          const phone = normalizePhone(d.phone)
+          if (role === 'customer' && phone.length !== 10) {
+            throw new APIError('Customer ke liye 10-digit mobile number zaroori hai (login isi number se hoga).', 400)
+          }
+          d.phone = phone || undefined
+          if (phone) {
+            const dup = await req.payload.find({
+              collection: 'users',
+              where: { phone: { equals: phone } } as any,
+              limit: 1,
+              depth: 0,
+              overrideAccess: true,
+            })
+            const other = dup.docs.find((u: any) => String(u.id) !== String(prev.id ?? ''))
+            if (other) throw new APIError('Ye mobile number kisi aur user ke paas pehle se hai.', 400)
+          }
+        }
+
         if (role === 'customer') {
           // Naya customer => aaj se 1 saal ki subscription
           if (operation === 'create') {
@@ -89,7 +114,17 @@ export const Users: CollectionConfig = {
   },
   fields: [
     { name: 'name', type: 'text', label: 'Full name' },
-    { name: 'phone', type: 'text', label: 'Phone (optional)' },
+    {
+      name: 'phone',
+      type: 'text',
+      label: 'Mobile number (login ke liye)',
+      index: true,
+      access: { create: staffOnly, update: staffOnly },
+      admin: {
+        description: 'Customer isi 10-digit mobile number se OTP login karega. Customer ke liye zaroori hai.',
+        placeholder: '9322451778',
+      },
+    },
     {
       name: 'role',
       type: 'select',

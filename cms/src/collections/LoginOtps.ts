@@ -15,7 +15,8 @@ export const LoginOtps: CollectionConfig = {
   },
   timestamps: true,
   fields: [
-    { name: 'email', type: 'email', required: true, index: true },
+    // email ya tel:XXXXXXXXXX
+    { name: 'email', type: 'text', required: true, index: true },
     { name: 'codeHash', type: 'text', required: true },
     { name: 'expiresAt', type: 'date', required: true },
     { name: 'attempts', type: 'number', defaultValue: 0 },
