@@ -94,7 +94,7 @@
     });
 
     // customer login ho chuka hai => "Client Login" mat dikhao:
-    //  - portal page par poora hide, baaki pages par "My Gallery" ban jata hai
+    //  - portal page par poora hide, baaki pages par "My Account" ban jata hai
     if (!window.fetch) return;
     fetch('/api/users/me', { credentials: 'include' })
       .then(function (r) { return r.ok ? r.json() : null; })
@@ -102,7 +102,7 @@
         if (!d || !d.user || d.user.role !== 'customer') return;
         links.forEach(function (a) {
           if (here === 'portal.html') a.style.display = 'none';
-          else a.textContent = 'My Gallery';
+          else a.textContent = 'My Account';
         });
       })
       .catch(function () {});

@@ -141,7 +141,7 @@
       (data.docs || []).forEach(function (f) {
         var mime = f.mimeType || '';
         if (mime.indexOf('image/') === 0) state.photos.push(f);
-        else if (mime.indexOf('video/') === 0 || f.videoUrl) state.videos.push(f);
+        if (mime.indexOf('video/') === 0 || f.videoUrl) state.videos.push(f);
       });
       render();
     }).catch(function (err) {
@@ -182,7 +182,8 @@
     }
     return '<article class="portal-video">' +
       '<div class="portal-frame">' + media + '</div>' +
-      '<div class="portal-meta"><h3>' + esc(f.title) + '</h3>' + dlLink(f) + '</div>' +
+      '<div class="portal-meta"><h3>' + esc(f.title) + '</h3>' +
+        (f.videoUrl ? '<a class="portal-dl" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Open</a>' : dlLink(f)) + '</div>' +
       (f.note ? '<p class="portal-note">' + esc(f.note) + '</p>' : '') + '</article>';
   }
 

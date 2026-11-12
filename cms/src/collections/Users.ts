@@ -6,7 +6,7 @@ import { isAdminUser, isStaffUser } from '../access'
 const staffOnly = ({ req }: { req: { user?: unknown } }) => isStaffUser(req.user as any)
 const isCustomerDoc = (siblingData: any, data: any) => (data?.role ?? siblingData?.role) === 'customer'
 
-/** mobile -> sirf aakhri 10 digit */
+/** mobile number -> last 10 digits only */
 const normalizePhone = (v: unknown) => String(v ?? '').replace(/\D/g, '').slice(-10)
 
 function addOneYear(from: Date) {
@@ -23,18 +23,18 @@ export const Users: CollectionConfig = {
     defaultColumns: ['email', 'name', 'phone', 'role', 'subscriptionEnd', 'updatedAt'],
     group: 'Settings',
     description:
-      'Admin = poora access. Editor = website content + customers manage kar sakta hai. Customer = website ke Client Login se OTP dwara apni photos / videos dekhta hai (1 saal ki subscription).',
+      'Admin = full access. Editor = manages website content and customers. Customer = signs in to the website Client Login with an OTP to view their own photos and videos (1-year subscription).',
     hidden: ({ user }) => !isStaffUser(user as any),
   },
   auth: {
-    tokenExpiration: 60 * 60 * 24 * 7, // 7 din login rahega
+    tokenExpiration: 60 * 60 * 24 * 7, // stay signed in for 7 days
     maxLoginAttempts: 8,
-    lockTime: 10 * 60 * 1000, // 10 minute
+    lockTime: 10 * 60 * 1000, // 10 minutes
   },
   access: {
-    // Admin panel me sirf staff (admin / editor) ghus sakta hai. Customer ke liye sirf portal.
+    // Only staff (admin / editor) can open the admin panel. Customers only use the website portal.
     admin: ({ req }) => isStaffUser(req.user as any),
-    // Editor bhi customer bana sakta hai (role hamesha 'customer' hi rahega, neeche hook + field access).
+    // Editors can create customers too (role is always forced to 'customer' by the hook + field access below).
     create: ({ req }) => isStaffUser(req.user as any),
     delete: ({ req: { user } }) => {
       if (!user) return false
@@ -44,7 +44,7 @@ export const Users: CollectionConfig = {
     },
     read: ({ req: { user } }) => {
       if (!user) return false
-      // staff (admin + editor) list me sabko dekh sakta hai (admin users bhi)
+      // staff (admin + editor) can see every user in the list, including admins
       if (isStaffUser(user as any)) return true
       return { id: { equals: user.id } }
     },
@@ -63,21 +63,21 @@ export const Users: CollectionConfig = {
         const now = new Date()
 
         if (operation === 'create') {
-          // Sabse pehla user hamesha admin hota hai, baaki default "customer".
+          // The very first user is always admin; everyone else defaults to "customer".
           const { totalDocs } = await req.payload.count({ collection: 'users', overrideAccess: true })
           d.role = totalDocs === 0 ? 'admin' : d.role || 'customer'
         } else if ('role' in d && !d.role) {
-          // role khaali karke koi galti se admin na ban jaye
+          // clearing the role must never turn a user into an admin
           d.role = 'customer'
         }
 
         const role = d.role ?? prev.role ?? (operation === 'create' ? 'customer' : undefined)
 
-        // ---- mobile number: 10 digit, customer ke liye zaroori, duplicate nahi ----
+        // ---- mobile number: 10 digits, required for customers, must be unique ----
         if (operation === 'create' || 'phone' in d) {
           const phone = normalizePhone(d.phone)
           if (role === 'customer' && phone.length !== 10) {
-            throw new APIError('Customer ke liye 10-digit mobile number zaroori hai (login isi number se hoga).', 400)
+            throw new APIError('A 10-digit mobile number is required for customers (they sign in with it).', 400)
           }
           d.phone = phone || undefined
           if (phone) {
@@ -89,17 +89,23 @@ export const Users: CollectionConfig = {
               overrideAccess: true,
             })
             const other = dup.docs.find((u: any) => String(u.id) !== String(prev.id ?? ''))
-            if (other) throw new APIError('Ye mobile number kisi aur user ke paas pehle se hai.', 400)
+            if (other) throw new APIError('This mobile number is already used by another user.', 400)
           }
         }
 
+        // Admins / editors have no subscription: drop the pre-filled dates for them
+        if (operation === 'create' && role !== 'customer') {
+          d.subscriptionStart = null
+          d.subscriptionEnd = null
+        }
+
         if (role === 'customer') {
-          // Naya customer => aaj se 1 saal ki subscription
+          // New customer => 1-year subscription starting today
           if (operation === 'create') {
             if (!d.subscriptionStart) d.subscriptionStart = now.toISOString()
             if (!d.subscriptionEnd) d.subscriptionEnd = addOneYear(new Date(d.subscriptionStart)).toISOString()
           }
-          // "Renew for 1 year" tick karke save kiya => abhi ki end date se (ya aaj se, jo baad ho) +1 saal
+          // "Renew for 1 year" ticked and saved => +1 year from the current end date (or from today, whichever is later)
           if (d.renewOneYear) {
             const current = new Date(d.subscriptionEnd ?? prev.subscriptionEnd ?? 0)
             const base = current.getTime() > now.getTime() ? current : now
@@ -107,7 +113,7 @@ export const Users: CollectionConfig = {
             if (!d.subscriptionStart && !prev.subscriptionStart) d.subscriptionStart = now.toISOString()
           }
         }
-        d.renewOneYear = false // checkbox hamesha reset
+        d.renewOneYear = false // always reset the checkbox
         return data
       },
     ],
@@ -117,11 +123,11 @@ export const Users: CollectionConfig = {
     {
       name: 'phone',
       type: 'text',
-      label: 'Mobile number (login ke liye)',
+      label: 'Mobile number (used to sign in)',
       index: true,
       access: { create: staffOnly, update: staffOnly },
       admin: {
-        description: 'Customer isi 10-digit mobile number se OTP login karega. Customer ke liye zaroori hai.',
+        description: 'The customer signs in with an OTP sent to this 10-digit mobile number. Required for customers.',
         placeholder: '9322451778',
       },
     },
@@ -136,7 +142,7 @@ export const Users: CollectionConfig = {
         { label: 'Customer (portal login only)', value: 'customer' },
       ],
       access: {
-        // role sirf admin badal sakta hai - editor khud ko admin nahi bana sakta
+        // only an admin can change the role - an editor cannot promote themselves
         create: ({ req }) => isAdminUser(req.user as any),
         update: ({ req }) => isAdminUser(req.user as any),
       },
@@ -149,13 +155,14 @@ export const Users: CollectionConfig = {
         initCollapsed: false,
         condition: (data, siblingData) => isCustomerDoc(siblingData, data),
         description:
-          'Customer OTP se sirf tab login kar sakta hai jab "Access valid till" aaj ke baad ho. Naya customer banate hi 1 saal apne-aap set ho jata hai.',
+          'A customer can sign in with OTP only while "Access valid till" is in the future. A new customer automatically gets 1 year from today.',
       },
       fields: [
         {
           name: 'subscriptionStart',
           type: 'date',
           label: 'Subscription start',
+          defaultValue: () => new Date().toISOString(), // pre-filled with today on the create form
           access: { create: staffOnly, update: staffOnly },
           admin: { date: { pickerAppearance: 'dayOnly', displayFormat: 'dd MMM yyyy' } },
         },
@@ -164,16 +171,17 @@ export const Users: CollectionConfig = {
           type: 'date',
           label: 'Access valid till',
           index: true,
+          defaultValue: () => addOneYear(new Date()).toISOString(), // pre-filled with today + 1 year
           access: { create: staffOnly, update: staffOnly },
           admin: { date: { pickerAppearance: 'dayAndTime', displayFormat: 'dd MMM yyyy' } },
         },
         {
           name: 'renewOneYear',
           type: 'checkbox',
-          label: 'Renew for 1 more year (tick + Save)',
+          label: 'Renew for 1 more year (tick and Save)',
           defaultValue: false,
           access: { create: staffOnly, update: staffOnly },
-          admin: { description: 'Tick karke Save karo => end date me +1 saal (agar expire ho chuka hai to aaj se +1 saal).' },
+          admin: { description: 'Tick this and Save to add 1 year to the end date (if already expired, 1 year from today).' },
         },
       ],
     },

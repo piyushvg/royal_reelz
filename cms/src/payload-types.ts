@@ -78,6 +78,8 @@ export interface Config {
     team: Team;
     videos: Video;
     enquiries: Enquiry;
+    'customer-files': CustomerFile;
+    'login-otps': LoginOtp;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -96,6 +98,8 @@ export interface Config {
     team: TeamSelect<false> | TeamSelect<true>;
     videos: VideosSelect<false> | VideosSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
+    'customer-files': CustomerFilesSelect<false> | CustomerFilesSelect<true>;
+    'login-otps': LoginOtpsSelect<false> | LoginOtpsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -148,11 +152,25 @@ export interface UserAuthOperations {
   };
 }
 /**
+ * Admin = full access. Editor = manages website content and customers. Customer = signs in to the website Client Login with an OTP to view their own photos and videos (1-year subscription).
+ *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
  */
 export interface User {
   id: number;
+  name?: string | null;
+  /**
+   * The customer signs in with an OTP sent to this 10-digit mobile number. Required for customers.
+   */
+  phone?: string | null;
+  role?: ('admin' | 'editor' | 'customer') | null;
+  subscriptionStart?: string | null;
+  subscriptionEnd?: string | null;
+  /**
+   * Tick this and Save to add 1 year to the end date (if already expired, 1 year from today).
+   */
+  renewOneYear?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -370,7 +388,7 @@ export interface Team {
   createdAt: string;
 }
 /**
- * YouTube link paste karo. Page par video apne aap play hoti hai jab scroll me aati hai.
+ * Paste the YouTube link. The video plays automatically when it scrolls into view.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "videos".
@@ -379,7 +397,7 @@ export interface Video {
   id: number;
   title: string;
   /**
-   * Koi bhi YouTube link chalega: youtube.com/watch?v=..., youtu.be/..., ya /shorts/...
+   * Any YouTube link works: youtube.com/watch?v=..., youtu.be/... or /shorts/...
    */
   youtubeUrl: string;
   caption?: string | null;
@@ -404,6 +422,68 @@ export interface Enquiry {
   weddingDate?: string | null;
   message?: string | null;
   status?: ('new' | 'contacted') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Choose a customer, then upload a photo / video or paste a video link. Customers only see their own files.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-files".
+ */
+export interface CustomerFile {
+  id: number;
+  /**
+   * Only users with the "Customer" role are listed. Create the customer under Users first.
+   */
+  customer: number | User;
+  title: string;
+  /**
+   * YouTube (unlisted), Vimeo or any other link. Leave empty if you are uploading a video file.
+   */
+  videoUrl?: string | null;
+  /**
+   * Google Drive / WeTransfer link for the full-quality files.
+   */
+  downloadUrl?: string | null;
+  note?: string | null;
+  /**
+   * Lower numbers appear first on the website.
+   */
+  order?: number | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    thumbnail?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-otps".
+ */
+export interface LoginOtp {
+  id: number;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  usedAt?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -474,6 +554,14 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'enquiries';
         value: number | Enquiry;
+      } | null)
+    | ({
+        relationTo: 'customer-files';
+        value: number | CustomerFile;
+      } | null)
+    | ({
+        relationTo: 'login-otps';
+        value: number | LoginOtp;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -522,6 +610,12 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  name?: T;
+  phone?: T;
+  role?: T;
+  subscriptionStart?: T;
+  subscriptionEnd?: T;
+  renewOneYear?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -692,6 +786,56 @@ export interface EnquiriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customer-files_select".
+ */
+export interface CustomerFilesSelect<T extends boolean = true> {
+  customer?: T;
+  title?: T;
+  videoUrl?: T;
+  downloadUrl?: T;
+  note?: T;
+  order?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        thumbnail?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-otps_select".
+ */
+export interface LoginOtpsSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
+  usedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -757,16 +901,16 @@ export interface Site {
   edition: string;
   scrollHint: string;
   /**
-   * Jaise: © Royal Reelz {year}. All rights reserved.  ({year} apne aap saal ban jayega)
+   * Example: © Royal Reelz {year}. All rights reserved.  ({year} is replaced with the current year automatically)
    */
   footer?: string | null;
   /**
-   * Ek hi tagline: loading screen, cover/header aur footer logo ke neeche, teeno jagah yahi dikhegi.
+   * A single tagline, shown on the loading screen, in the cover/header and below the footer logo.
    */
   tagline?: string | null;
   credit?: {
     /**
-     * Jaise: Designed and Powered by
+     * Example: Designed and Powered by
      */
     text?: string | null;
     name?: string | null;
@@ -890,7 +1034,7 @@ export interface Contact {
   email?: string | null;
   phone?: string | null;
   /**
-   * Contact form yahan post hoti hai. Submissions Contact enquiries list mein dikhti hain. Default: /api/enquiry
+   * The contact form posts here. Submissions appear in the Contact enquiries list. Default: /api/enquiry
    */
   formAction?: string | null;
   updatedAt?: string | null;

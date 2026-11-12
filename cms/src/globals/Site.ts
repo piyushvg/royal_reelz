@@ -23,20 +23,20 @@ export const Site: GlobalConfig = {
       name: 'footer',
       label: 'Footer copyright line',
       type: 'text',
-      admin: { description: 'Jaise: © Royal Reelz {year}. All rights reserved.  ({year} apne aap saal ban jayega)' },
+      admin: { description: 'Example: © Royal Reelz {year}. All rights reserved.  ({year} is replaced with the current year automatically)' },
     },
     {
       name: 'tagline',
       label: 'Tagline',
       type: 'text',
-      admin: { description: 'Ek hi tagline: loading screen, cover/header aur footer logo ke neeche, teeno jagah yahi dikhegi.' },
+      admin: { description: 'A single tagline, shown on the loading screen, in the cover/header and below the footer logo.' },
     },
     {
       name: 'credit',
       label: 'Footer credit',
       type: 'group',
       fields: [
-        { name: 'text', type: 'text', admin: { description: 'Jaise: Designed and Powered by' } },
+        { name: 'text', type: 'text', admin: { description: 'Example: Designed and Powered by' } },
         { name: 'name', type: 'text' },
         { name: 'url', type: 'text' },
       ],

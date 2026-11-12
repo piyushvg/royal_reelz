@@ -232,3 +232,13 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
 .btn--style-icon-label, .btn--style-icon-label .btn__label { color: var(--rr-maroon); }
 .pill--style-light-gray { background: var(--rr-cream); color: var(--rr-maroon); border: 1px solid var(--rr-line); }
 .pill--style-light-gray:hover { background: var(--rr-gold); color: var(--rr-maroon); }
+
+/* ---------- Users form order: Full name, Mobile number, then Email / Password ---------- */
+.collection-edit--users .document-fields__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.collection-edit--users .document-fields__edit > .render-fields { display: contents; }
+.collection-edit--users .document-fields__edit > .render-fields > :has(#field-name) { order: -2; }
+.collection-edit--users .document-fields__edit > .render-fields > :has(#field-phone) { order: -1; }
