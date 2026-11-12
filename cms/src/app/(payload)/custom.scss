@@ -240,5 +240,16 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
   gap: 1.5rem;
 }
 .collection-edit--users .document-fields__edit > .render-fields { display: contents; }
-.collection-edit--users .document-fields__edit > .render-fields > :has(#field-name) { order: -2; }
+
+/* ---------- Customer files form: the file upload comes last (after Customer, Title, Video link, Download link, Note) ---------- */
+.collection-edit--customer-files .document-fields__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.collection-edit--customer-files .document-fields__edit > .render-fields { display: contents; }
+.collection-edit--customer-files .document-fields__edit > .file-field,
+.collection-edit--customer-files .document-fields__edit > :has(.file-details),
+.collection-edit--customer-files .document-fields__edit > :has(.file-field__upload) { order: 99; }
+.collection-edit--users .document-fields__edit > .render-fields > :has(#field-firstName) { order: -2; }
 .collection-edit--users .document-fields__edit > .render-fields > :has(#field-phone) { order: -1; }

@@ -1,9 +1,15 @@
-import { APIError, type CollectionConfig, type Where } from 'payload'
+import { APIError } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 import { isAdminUser, isStaffUser } from '../access'
 
 const staffOnly = ({ req }: { req: { user?: unknown } }) => isStaffUser(req.user as any)
 const isCustomerDoc = (siblingData: any, data: any) => (data?.role ?? siblingData?.role) === 'customer'
+
+/** The main admin account (from .env). It is hidden from every other user's list. */
+const SUPER_EMAIL = (process.env.ADMIN_EMAIL || 'admin@royalreelz.com').trim().toLowerCase()
+const isSuperUser = (u: any) => String(u?.email || '').trim().toLowerCase() === SUPER_EMAIL
+const notSuper: Where = { email: { not_equals: SUPER_EMAIL } }
 
 /** mobile number -> last 10 digits only */
 const normalizePhone = (v: unknown) => String(v ?? '').replace(/\D/g, '').slice(-10)
@@ -19,11 +25,13 @@ export const Users: CollectionConfig = {
   labels: { singular: 'User', plural: 'Users' },
   admin: {
     useAsTitle: 'email',
-    defaultColumns: ['email', 'name', 'phone', 'role', 'subscriptionEnd', 'updatedAt'],
+    defaultColumns: ['email', 'name', 'phone', 'phone2', 'role', 'subscriptionEnd', 'updatedAt'],
     group: 'Settings',
     description:
       'Admin = full access. Editor = manages website content and customers. Customer = signs in to the website Client Login with an OTP to view their own photos and videos (1-year subscription).',
     hidden: ({ user }) => !isStaffUser(user as any),
+    // The main admin account never appears in the Users list (not even for itself).
+    baseListFilter: (): Where => notSuper,
   },
   auth: {
     tokenExpiration: 60 * 60 * 24 * 7, // stay signed in for 7 days
@@ -37,26 +45,31 @@ export const Users: CollectionConfig = {
     create: ({ req }) => isStaffUser(req.user as any),
     delete: ({ req: { user } }) => {
       if (!user) return false
-      if (isAdminUser(user as any)) return true
-      if (isStaffUser(user as any)) return { role: { equals: 'customer' } }
+      if (isAdminUser(user as any)) return isSuperUser(user) ? true : notSuper
+      if (isStaffUser(user as any)) {
+        const where: Where = { role: { equals: 'customer' } }
+        return where
+      }
       return false
     },
     read: ({ req: { user } }) => {
       if (!user) return false
-      // staff (admin + editor) can see every user in the list, including admins
-      if (isStaffUser(user as any)) return true
-      return { id: { equals: user.id } }
+      // staff can see every user in the list, except that the main admin account is hidden from everyone else
+      if (isStaffUser(user as any)) return isSuperUser(user) ? true : notSuper
+      const own: Where = { id: { equals: user.id } }
+      return own
     },
     update: ({ req: { user } }) => {
       if (!user) return false
-      if (isAdminUser(user as any)) return true
+      if (isAdminUser(user as any)) return isSuperUser(user) ? true : notSuper
       if (isStaffUser(user as any)) {
         const where: Where = {
-          or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }],
+          and: [notSuper, { or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }] }],
         }
         return where
       }
-      return { id: { equals: user.id } }
+      const own: Where = { id: { equals: user.id } }
+      return own
     },
   },
   hooks: {
@@ -77,23 +90,39 @@ export const Users: CollectionConfig = {
 
         const role = d.role ?? prev.role ?? (operation === 'create' ? 'customer' : undefined)
 
-        // ---- mobile number: 10 digits, required for customers, must be unique ----
-        if (operation === 'create' || 'phone' in d) {
-          const phone = normalizePhone(d.phone)
-          if (role === 'customer' && phone.length !== 10) {
-            throw new APIError('A 10-digit mobile number is required for customers (they sign in with it).', 400)
+        // ---- name: first / middle / last -> full name (kept in the hidden "name" field) ----
+        if (operation === 'create' || 'firstName' in d || 'middleName' in d || 'lastName' in d) {
+          const part = (k: string) => String((k in d ? d[k] : prev[k]) ?? '').trim()
+          const first = part('firstName')
+          const middle = part('middleName')
+          const last = part('lastName')
+          if (role === 'customer' && !first) throw new APIError('First name is required for customers.', 400)
+          const full = [first, middle, last].filter(Boolean).join(' ')
+          if (full) d.name = full
+        }
+
+        // ---- mobile numbers: husband + wife, 10 digits each, required for customers, unique ----
+        if (operation === 'create' || 'phone' in d || 'phone2' in d) {
+          const p1 = normalizePhone('phone' in d ? d.phone : prev.phone)
+          const p2 = normalizePhone('phone2' in d ? d.phone2 : prev.phone2)
+          if (role === 'customer') {
+            if (p1.length !== 10) throw new APIError("Husband's 10-digit mobile number is required.", 400)
+            if (p2.length !== 10) throw new APIError("Wife's 10-digit mobile number is required.", 400)
           }
-          d.phone = phone || undefined
-          if (phone) {
+          if (p1 && p1 === p2) throw new APIError("Husband's and wife's mobile numbers must be different.", 400)
+          if ('phone' in d || operation === 'create') d.phone = p1 || undefined
+          if ('phone2' in d || operation === 'create') d.phone2 = p2 || undefined
+
+          for (const n of [p1, p2].filter(Boolean)) {
             const dup = await req.payload.find({
               collection: 'users',
-              where: { phone: { equals: phone } } as any,
-              limit: 1,
+              where: { or: [{ phone: { equals: n } }, { phone2: { equals: n } }] } as any,
+              limit: 5,
               depth: 0,
               overrideAccess: true,
             })
             const other = dup.docs.find((u: any) => String(u.id) !== String(prev.id ?? ''))
-            if (other) throw new APIError('This mobile number is already used by another user.', 400)
+            if (other) throw new APIError(`The mobile number ${n} is already used by another user.`, 400)
           }
         }
 
@@ -123,17 +152,36 @@ export const Users: CollectionConfig = {
     ],
   },
   fields: [
-    { name: 'name', type: 'text', label: 'Full name' },
     {
-      name: 'phone',
-      type: 'text',
-      label: 'Mobile number (used to sign in)',
-      index: true,
-      access: { create: staffOnly, update: staffOnly },
-      admin: {
-        description: 'The customer signs in with an OTP sent to this 10-digit mobile number. Required for customers.',
-        placeholder: '9322451778',
-      },
+      type: 'row',
+      fields: [
+        { name: 'firstName', type: 'text', label: 'First name' },
+        { name: 'middleName', type: 'text', label: 'Middle name' },
+        { name: 'lastName', type: 'text', label: 'Last name' },
+      ],
+    },
+    // Combined name, filled automatically from the three fields above (also keeps older users' names).
+    { name: 'name', type: 'text', label: 'Full name', admin: { hidden: true } },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'phone',
+          type: 'text',
+          label: "Husband's mobile number",
+          index: true,
+          access: { create: staffOnly, update: staffOnly },
+          admin: { placeholder: '9322451778' },
+        },
+        {
+          name: 'phone2',
+          type: 'text',
+          label: "Wife's mobile number",
+          index: true,
+          access: { create: staffOnly, update: staffOnly },
+          admin: { placeholder: '9322451779' },
+        },
+      ],
     },
     {
       name: 'role',
@@ -159,7 +207,7 @@ export const Users: CollectionConfig = {
         initCollapsed: false,
         condition: (data, siblingData) => isCustomerDoc(siblingData, data),
         description:
-          'A customer can sign in with OTP only while "Access valid till" is in the future. A new customer automatically gets 1 year from today.',
+          'Either mobile number can sign in with OTP while "Access valid till" is in the future. A new customer automatically gets 1 year from today.',
       },
       fields: [
         {
