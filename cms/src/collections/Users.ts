@@ -1,5 +1,5 @@
 import { APIError } from 'payload'
-import type { CollectionConfig } from 'payload'
+import type { CollectionConfig, Where } from 'payload'
 
 import { isAdminUser, isStaffUser } from '../access'
 
@@ -39,20 +39,28 @@ export const Users: CollectionConfig = {
     delete: ({ req: { user } }) => {
       if (!user) return false
       if (isAdminUser(user as any)) return true
-      if (isStaffUser(user as any)) return { role: { equals: 'customer' } }
+      if (isStaffUser(user as any)) {
+        const where: Where = { role: { equals: 'customer' } }
+        return where
+      }
       return false
     },
     read: ({ req: { user } }) => {
       if (!user) return false
       // staff (admin + editor) can see every user in the list, including admins
       if (isStaffUser(user as any)) return true
-      return { id: { equals: user.id } }
+      const own: Where = { id: { equals: user.id } }
+      return own
     },
     update: ({ req: { user } }) => {
       if (!user) return false
       if (isAdminUser(user as any)) return true
-      if (isStaffUser(user as any)) return { or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }] }
-      return { id: { equals: user.id } }
+      if (isStaffUser(user as any)) {
+        const where: Where = { or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }] }
+        return where
+      }
+      const own: Where = { id: { equals: user.id } }
+      return own
     },
   },
   hooks: {
