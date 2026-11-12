@@ -68,7 +68,12 @@ async function findCustomer(payload: Payload, id: { email?: string; phone?: stri
   const res = await payload.find({
     collection: 'users',
     where: {
-      and: [id.email ? { email: { equals: id.email } } : { phone: { equals: id.phone } }, { role: { equals: 'customer' } }],
+      and: [
+        id.email
+          ? { email: { equals: id.email } }
+          : { or: [{ phone: { equals: id.phone } }, { phone2: { equals: id.phone } }] },
+        { role: { equals: 'customer' } },
+      ],
     } as any,
     limit: 1,
     depth: 0,

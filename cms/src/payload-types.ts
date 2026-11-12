@@ -1,4 +1,3 @@
-
 /* tslint:disable */
 /* eslint-disable */
 /**
@@ -160,11 +159,12 @@ export interface UserAuthOperations {
  */
 export interface User {
   id: number;
+  firstName?: string | null;
+  middleName?: string | null;
+  lastName?: string | null;
   name?: string | null;
-  /**
-   * The customer signs in with an OTP sent to this 10-digit mobile number. Required for customers.
-   */
   phone?: string | null;
+  phone2?: string | null;
   role?: ('admin' | 'editor' | 'customer') | null;
   subscriptionStart?: string | null;
   subscriptionEnd?: string | null;
@@ -611,8 +611,12 @@ export interface PayloadMigration {
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
+  firstName?: T;
+  middleName?: T;
+  lastName?: T;
   name?: T;
   phone?: T;
+  phone2?: T;
   role?: T;
   subscriptionStart?: T;
   subscriptionEnd?: T;

@@ -159,11 +159,27 @@
       (own ? ' download' : ' target="_blank" rel="noopener"') + '>Download</a>';
   }
 
+  /* download button for a photo (own file => real download, external link => new tab) */
+  function photoDownload(f, cls) {
+    var href = f.downloadUrl || (f.filename ? fileSrc(f) : '');
+    if (!href) return '';
+    if (f.downloadUrl) {
+      return '<a class="' + cls + '" href="' + esc(href) + '" target="_blank" rel="noopener">Download</a>';
+    }
+    var ext = (String(f.filename).match(/\.[A-Za-z0-9]+$/) || ['.jpg'])[0];
+    var name = String(f.title || 'photo').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'photo';
+    return '<a class="' + cls + '" href="' + esc(href) + '" download="' + esc(name + ext) + '">Download</a>';
+  }
+
   function photoCard(f, i) {
-    return '<figure class="portal-photo">' +
+    return '<figure class="portal-tile">' +
       '<button type="button" class="portal-open" data-i="' + i + '" aria-label="Open ' + esc(f.title) + '">' +
       '<img src="' + esc(fileSrc(f, 'thumbnail')) + '" data-full="' + esc(fileSrc(f)) + '" alt="' + esc(f.title) + '" loading="lazy"></button>' +
-      '<figcaption><span>' + esc(f.title) + '</span>' + dlLink(f) + '</figcaption></figure>';
+      '<figcaption class="portal-cap">' +
+        '<span class="portal-cap-title">' + esc(f.title) + '</span>' +
+        (f.note ? '<span class="portal-cap-note">' + esc(f.note) + '</span>' : '') +
+        photoDownload(f, 'portal-cap-dl') +
+      '</figcaption></figure>';
   }
 
   function videoCard(f) {
@@ -198,7 +214,8 @@
 
     var total = state.photos.length + state.videos.length;
     $('#portal-sub').textContent = total
-      ? state.photos.length + ' photos · ' + state.videos.length + ' videos'
+      ? state.photos.length + (state.photos.length === 1 ? ' photo' : ' photos') + ' \u00b7 ' +
+        state.videos.length + (state.videos.length === 1 ? ' video' : ' videos')
       : 'Your files are not ready yet. We will let you know.';
 
     // jis tab me kuch hai wahi pehle dikhao
@@ -226,7 +243,7 @@
       '<button type="button" class="portal-lb-p" aria-label="Previous">&#8249;</button>' +
       '<img alt="">' +
       '<button type="button" class="portal-lb-n" aria-label="Next">&#8250;</button>' +
-      '<p class="portal-lb-c"></p>';
+      '<div class="portal-lb-c"></div>';
     document.body.appendChild(lb);
     lb.addEventListener('click', function (e) {
       var t = e.target;
@@ -257,7 +274,11 @@
     var f = state.photos[cur];
     lb.querySelector('img').src = fileSrc(f);
     lb.querySelector('img').alt = f.title || '';
-    lb.querySelector('.portal-lb-c').textContent = (cur + 1) + ' / ' + n + (f.title ? '  ·  ' + f.title : '');
+    lb.querySelector('.portal-lb-c').innerHTML =
+      '<span class="portal-lb-t">' + esc(f.title || '') + '</span>' +
+      (f.note ? '<span class="portal-lb-n2">' + esc(f.note) + '</span>' : '') +
+      '<span class="portal-lb-meta">' + (cur + 1) + ' / ' + n + '</span>' +
+      photoDownload(f, 'portal-lb-dl');
   }
   function openLb(i) {
     buildLightbox();
@@ -282,8 +303,8 @@
     var out = e.target.closest && e.target.closest('[data-logout]');
     if (out) {
       api('/users/logout', { method: 'POST' }).catch(function () {}).then(function () {
-        state = { photos: [], videos: [] };
-        routeUser(null);
+        // signed out -> back to the Royal Reelz website
+        window.location.href = 'index.html';
       });
     }
   });

@@ -114,15 +114,15 @@
 
         <!-- customer area -->
         <div id="portal-area" hidden>
-          <div class="portal-bar">
-            <div>
-              <p class="portal-hello" id="portal-hello">Welcome</p>
+          <div class="portal-top">
+            <div class="portal-top-main">
+              <p class="portal-eyebrow">Royal Reelz <i>&#10070;</i> My Gallery</p>
+              <h2 class="portal-hello" id="portal-hello">Welcome</h2>
               <p class="portal-sub" id="portal-sub"></p>
+              <p class="portal-plan" id="portal-plan" hidden></p>
             </div>
-            <button class="portal-link" type="button" data-logout>Sign out</button>
+            <button class="portal-signout" type="button" data-logout>Sign out</button>
           </div>
-
-          <p class="portal-plan" id="portal-plan" hidden></p>
 
           <div class="portal-tabs" role="tablist">
             <button type="button" class="portal-tab is-on" data-tab="photos" role="tab">Photos <span id="count-photos">0</span></button>
@@ -130,7 +130,7 @@
           </div>
 
           <div class="portal-panel is-on" id="panel-photos">
-            <div class="portal-grid" id="grid-photos"></div>
+            <div class="gallery-frame"><div class="portal-grid" id="grid-photos"></div></div>
             <p class="portal-empty" id="empty-photos" hidden>Your photos will appear here once they are ready.</p>
           </div>
           <div class="portal-panel" id="panel-videos">
