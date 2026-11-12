@@ -1,5 +1,4 @@
-import { APIError } from 'payload'
-import type { CollectionConfig } from 'payload'
+import { APIError, type CollectionConfig, type Where } from 'payload'
 
 import { isAdminUser, isStaffUser } from '../access'
 
@@ -51,7 +50,12 @@ export const Users: CollectionConfig = {
     update: ({ req: { user } }) => {
       if (!user) return false
       if (isAdminUser(user as any)) return true
-      if (isStaffUser(user as any)) return { or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }] }
+      if (isStaffUser(user as any)) {
+        const where: Where = {
+          or: [{ id: { equals: user.id } }, { role: { equals: 'customer' } }],
+        }
+        return where
+      }
       return { id: { equals: user.id } }
     },
   },

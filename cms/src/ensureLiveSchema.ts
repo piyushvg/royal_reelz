@@ -21,6 +21,34 @@ export async function ensureLiveSchema(db: SqlRunner) {
   if (!userColumns.has('role')) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`role\` text DEFAULT 'admin' NOT NULL`)
   }
+  if (!userColumns.has('phone')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`phone\` text`)
+  }
+  if (!userColumns.has('subscription_start')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`subscription_start\` text`)
+  }
+  if (!userColumns.has('subscription_end')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`subscription_end\` text`)
+  }
+  if (!userColumns.has('renew_one_year')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`renew_one_year\` integer DEFAULT 0`)
+  }
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`users_phone_idx\` ON \`users\` (\`phone\`)`)
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`users_subscription_end_idx\` ON \`users\` (\`subscription_end\`)`)
+
+  await db.run(sql`CREATE TABLE IF NOT EXISTS \`login_otps\` (
+    \`id\` integer PRIMARY KEY NOT NULL,
+    \`email\` text NOT NULL,
+    \`code_hash\` text NOT NULL,
+    \`expires_at\` text NOT NULL,
+    \`attempts\` numeric DEFAULT 0,
+    \`used_at\` text,
+    \`updated_at\` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL,
+    \`created_at\` text DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')) NOT NULL
+  )`)
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`login_otps_email_idx\` ON \`login_otps\` (\`email\`)`)
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`login_otps_updated_at_idx\` ON \`login_otps\` (\`updated_at\`)`)
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`login_otps_created_at_idx\` ON \`login_otps\` (\`created_at\`)`)
 
   await db.run(sql`CREATE TABLE IF NOT EXISTS \`customer_files\` (
     \`id\` integer PRIMARY KEY NOT NULL,
@@ -66,5 +94,13 @@ export async function ensureLiveSchema(db: SqlRunner) {
   }
   await db.run(
     sql`CREATE INDEX IF NOT EXISTS \`payload_locked_documents_rels_customer_files_id_idx\` ON \`payload_locked_documents_rels\` (\`customer_files_id\`)`,
+  )
+  if (!relColumns.has('login_otps_id')) {
+    await db.run(
+      sql`ALTER TABLE \`payload_locked_documents_rels\` ADD \`login_otps_id\` integer REFERENCES \`login_otps\`(\`id\`) ON UPDATE no action ON DELETE cascade`,
+    )
+  }
+  await db.run(
+    sql`CREATE INDEX IF NOT EXISTS \`payload_locked_documents_rels_login_otps_id_idx\` ON \`payload_locked_documents_rels\` (\`login_otps_id\`)`,
   )
 }
