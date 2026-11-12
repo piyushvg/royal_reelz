@@ -201,3 +201,44 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
 .btn--style-secondary:hover { border-color: var(--rr-gold); }
 /* welcome banner buttons */
 .rr-welcome__btns { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+
+
+/* ---------- Bugfix: saare action buttons RIGHT side + proper colour combination ---------- */
+/* edit screen: status left, Save / Publish etc. right */
+.doc-controls__wrapper { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.doc-controls__controls-wrapper { margin-left: auto; display: flex; justify-content: flex-end; }
+.doc-controls__controls { display: flex; align-items: center; justify-content: flex-end; flex-wrap: wrap; gap: 0.6rem; }
+.form-submit { display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem; }
+/* list screen: title left, "Create New" right */
+.list-header { width: 100%; }
+.list-header__title-and-actions { display: flex; align-items: center; justify-content: space-between; gap: 1rem; width: 100%; }
+.list-header__actions, .list-header__title-actions { display: flex; align-items: center; justify-content: flex-end; gap: 0.6rem; margin-left: auto; }
+.list-selection, .list-selection__actions { display: flex; justify-content: flex-end; align-items: center; gap: 0.6rem; }
+.list-controls__buttons { justify-content: flex-end; }
+
+/* colours: primary = maroon + white text, secondary = white + maroon text, danger = red */
+.btn--style-primary, .btn--style-primary .btn__content, .btn--style-primary .btn__label { color: #fff; }
+.btn--style-secondary, .btn--style-secondary .btn__content, .btn--style-secondary .btn__label {
+  background: #fff; color: var(--rr-maroon); border: 1px solid var(--rr-maroon);
+}
+.btn--style-secondary:hover:not(:disabled), a.btn--style-secondary:hover {
+  background: var(--rr-gold); border-color: var(--rr-gold); color: var(--rr-maroon);
+}
+.btn--style-secondary:hover .btn__content, .btn--style-secondary:hover .btn__label { background: transparent; color: var(--rr-maroon); }
+.btn--style-tertiary, .btn--style-tertiary .btn__content, .btn--style-tertiary .btn__label { color: var(--rr-maroon); }
+.btn--style-tertiary:hover { color: var(--rr-gold-deep); }
+.btn--style-error, .btn--style-error .btn__content, .btn--style-error .btn__label { background: #a01e1e; border-color: #a01e1e; color: #fff; }
+.btn--style-error:hover:not(:disabled) { background: #7d1515; border-color: #7d1515; }
+.btn--style-icon-label, .btn--style-icon-label .btn__label { color: var(--rr-maroon); }
+.pill--style-light-gray { background: var(--rr-cream); color: var(--rr-maroon); border: 1px solid var(--rr-line); }
+.pill--style-light-gray:hover { background: var(--rr-gold); color: var(--rr-maroon); }
+
+/* ---------- Users form order: Full name, Mobile number, then Email / Password ---------- */
+.collection-edit--users .document-fields__edit {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.collection-edit--users .document-fields__edit > .render-fields { display: contents; }
+.collection-edit--users .document-fields__edit > .render-fields > :has(#field-name) { order: -2; }
+.collection-edit--users .document-fields__edit > .render-fields > :has(#field-phone) { order: -1; }

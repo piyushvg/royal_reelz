@@ -17,7 +17,10 @@ export const BeforeDashboard: React.FC = async () => {
     }
   }
 
-  const [newEnquiries, enquiries, photos, videos, places, customers, customerFiles] = await Promise.all([
+  const nowISO = new Date().toISOString()
+  const in30ISO = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [newEnquiries, enquiries, photos, videos, places, customers, customerFiles, expiringSoon, expired] = await Promise.all([
     count('enquiries', { status: { equals: 'new' } }),
     count('enquiries'),
     count('photos'),
@@ -25,6 +28,16 @@ export const BeforeDashboard: React.FC = async () => {
     count('places'),
     count('users', { role: { equals: 'customer' } }),
     count('customer-files'),
+    count('users', {
+      and: [
+        { role: { equals: 'customer' } },
+        { subscriptionEnd: { greater_than: nowISO } },
+        { subscriptionEnd: { less_than: in30ISO } },
+      ],
+    }),
+    count('users', {
+      and: [{ role: { equals: 'customer' } }, { subscriptionEnd: { less_than: nowISO } }],
+    }),
   ])
 
   const stats = [
@@ -34,6 +47,8 @@ export const BeforeDashboard: React.FC = async () => {
     { label: 'Videos', value: videos, href: '/admin/collections/videos' },
     { label: 'Destinations', value: places, href: '/admin/collections/places' },
     { label: 'Customers', value: customers, href: '/admin/collections/users' },
+    { label: 'Expiring in 30 days', value: expiringSoon, href: '/admin/collections/users?sort=subscriptionEnd', accent: expiringSoon > 0 },
+    { label: 'Subscription expired', value: expired, href: '/admin/collections/users?sort=subscriptionEnd' },
     { label: 'Customer files', value: customerFiles, href: '/admin/collections/customer-files' },
   ]
 

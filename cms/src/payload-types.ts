@@ -1,3 +1,4 @@
+
 /* tslint:disable */
 /* eslint-disable */
 /**
@@ -79,6 +80,7 @@ export interface Config {
     videos: Video;
     enquiries: Enquiry;
     'customer-files': CustomerFile;
+    'login-otps': LoginOtp;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -98,6 +100,7 @@ export interface Config {
     videos: VideosSelect<false> | VideosSelect<true>;
     enquiries: EnquiriesSelect<false> | EnquiriesSelect<true>;
     'customer-files': CustomerFilesSelect<false> | CustomerFilesSelect<true>;
+    'login-otps': LoginOtpsSelect<false> | LoginOtpsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -150,7 +153,7 @@ export interface UserAuthOperations {
   };
 }
 /**
- * Admin = poora access. Editor = website content manage kar sakta hai (users nahi). Customer = sirf website ke Client Login se apni photos / videos dekhta hai.
+ * Admin = full access. Editor = manages website content and customers. Customer = signs in to the website Client Login with an OTP to view their own photos and videos (1-year subscription).
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users".
@@ -158,7 +161,17 @@ export interface UserAuthOperations {
 export interface User {
   id: number;
   name?: string | null;
+  /**
+   * The customer signs in with an OTP sent to this 10-digit mobile number. Required for customers.
+   */
+  phone?: string | null;
   role?: ('admin' | 'editor' | 'customer') | null;
+  subscriptionStart?: string | null;
+  subscriptionEnd?: string | null;
+  /**
+   * Tick this and Save to add 1 year to the end date (if already expired, 1 year from today).
+   */
+  renewOneYear?: boolean | null;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -376,7 +389,7 @@ export interface Team {
   createdAt: string;
 }
 /**
- * YouTube link paste karo. Page par video apne aap play hoti hai jab scroll me aati hai.
+ * Paste the YouTube link. The video plays automatically when it scrolls into view.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "videos".
@@ -385,7 +398,7 @@ export interface Video {
   id: number;
   title: string;
   /**
-   * Koi bhi YouTube link chalega: youtube.com/watch?v=..., youtu.be/..., ya /shorts/...
+   * Any YouTube link works: youtube.com/watch?v=..., youtu.be/... or /shorts/...
    */
   youtubeUrl: string;
   caption?: string | null;
@@ -414,7 +427,7 @@ export interface Enquiry {
   createdAt: string;
 }
 /**
- * Customer chuno, phir photo / video upload karo ya video ka link paste karo. Customer ko sirf apni files dikhti hain.
+ * Choose a customer, then upload a photo / video or paste a video link. Customers only see their own files.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "customer-files".
@@ -422,16 +435,16 @@ export interface Enquiry {
 export interface CustomerFile {
   id: number;
   /**
-   * Sirf "Customer" role wale users yahan dikhte hain. Pehle Users me customer banao.
+   * Only users with the "Customer" role are listed. Create the customer under Users first.
    */
   customer: number | User;
   title: string;
   /**
-   * YouTube (unlisted), Vimeo ya koi bhi link. Video file upload karni ho to ye khaali chhodo.
+   * YouTube (unlisted), Vimeo or any other link. Leave empty if you are uploading a video file.
    */
   videoUrl?: string | null;
   /**
-   * Full-quality files ka Google Drive / WeTransfer link.
+   * Google Drive / WeTransfer link for the full-quality files.
    */
   downloadUrl?: string | null;
   note?: string | null;
@@ -460,6 +473,20 @@ export interface CustomerFile {
       filename?: string | null;
     };
   };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-otps".
+ */
+export interface LoginOtp {
+  id: number;
+  email: string;
+  codeHash: string;
+  expiresAt: string;
+  attempts?: number | null;
+  usedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -532,6 +559,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'customer-files';
         value: number | CustomerFile;
+      } | null)
+    | ({
+        relationTo: 'login-otps';
+        value: number | LoginOtp;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -581,7 +612,11 @@ export interface PayloadMigration {
  */
 export interface UsersSelect<T extends boolean = true> {
   name?: T;
+  phone?: T;
   role?: T;
+  subscriptionStart?: T;
+  subscriptionEnd?: T;
+  renewOneYear?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -789,6 +824,19 @@ export interface CustomerFilesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "login-otps_select".
+ */
+export interface LoginOtpsSelect<T extends boolean = true> {
+  email?: T;
+  codeHash?: T;
+  expiresAt?: T;
+  attempts?: T;
+  usedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv_select".
  */
 export interface PayloadKvSelect<T extends boolean = true> {
@@ -854,16 +902,16 @@ export interface Site {
   edition: string;
   scrollHint: string;
   /**
-   * Jaise: © Royal Reelz {year}. All rights reserved.  ({year} apne aap saal ban jayega)
+   * Example: © Royal Reelz {year}. All rights reserved.  ({year} is replaced with the current year automatically)
    */
   footer?: string | null;
   /**
-   * Ek hi tagline: loading screen, cover/header aur footer logo ke neeche, teeno jagah yahi dikhegi.
+   * A single tagline, shown on the loading screen, in the cover/header and below the footer logo.
    */
   tagline?: string | null;
   credit?: {
     /**
-     * Jaise: Designed and Powered by
+     * Example: Designed and Powered by
      */
     text?: string | null;
     name?: string | null;
@@ -987,7 +1035,7 @@ export interface Contact {
   email?: string | null;
   phone?: string | null;
   /**
-   * Contact form yahan post hoti hai. Submissions Contact enquiries list mein dikhti hain. Default: /api/enquiry
+   * The contact form posts here. Submissions appear in the Contact enquiries list. Default: /api/enquiry
    */
   formAction?: string | null;
   updatedAt?: string | null;

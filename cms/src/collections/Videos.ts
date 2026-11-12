@@ -12,7 +12,7 @@ export const Videos: CollectionConfig = {
     useAsTitle: 'title',
     defaultColumns: ['title', 'youtubeUrl', 'order'],
     group: 'Videos',
-    description: 'YouTube link paste karo. Page par video apne aap play hoti hai jab scroll me aati hai.',
+    description: 'Paste the YouTube link. The video plays automatically when it scrolls into view.',
   },
   access: {
     read: publicRead,
@@ -30,7 +30,7 @@ export const Videos: CollectionConfig = {
       required: true,
       admin: {
         description:
-          'Koi bhi YouTube link chalega: youtube.com/watch?v=..., youtu.be/..., ya /shorts/...',
+          'Any YouTube link works: youtube.com/watch?v=..., youtu.be/... or /shorts/...',
       },
     },
     {

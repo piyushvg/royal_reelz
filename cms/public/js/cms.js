@@ -78,15 +78,34 @@
   // "Client Login" link header + footer menu me (CMS menu me na ho to bhi dikhe)
   function ensurePortalLink() {
     var here = (location.pathname.split('/').pop() || '').toLowerCase();
+    var links = [];
     [['.site-nav', 'nav-link'], ['.foot-nav', '']].forEach(function (p) {
       var nav = $(p[0]);
-      if (!nav || nav.querySelector('a[href$="portal.html"]')) return;
-      var a = document.createElement('a');
-      a.href = 'portal.html';
-      a.textContent = 'Client Login';
-      if (p[1]) a.className = p[1] + (here === 'portal.html' ? ' is-current' : '');
-      nav.appendChild(a);
+      if (!nav) return;
+      var a = nav.querySelector('a[href$="portal.html"]');
+      if (!a) {
+        a = document.createElement('a');
+        a.href = 'portal.html';
+        a.textContent = 'Client Login';
+        if (p[1]) a.className = p[1] + (here === 'portal.html' ? ' is-current' : '');
+        nav.appendChild(a);
+      }
+      links.push(a);
     });
+
+    // customer login ho chuka hai => "Client Login" mat dikhao:
+    //  - portal page par poora hide, baaki pages par "My Account" ban jata hai
+    if (!window.fetch) return;
+    fetch('/api/users/me', { credentials: 'include' })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) {
+        if (!d || !d.user || d.user.role !== 'customer') return;
+        links.forEach(function (a) {
+          if (here === 'portal.html') a.style.display = 'none';
+          else a.textContent = 'My Account';
+        });
+      })
+      .catch(function () {});
   }
 
   /* ------------------------------------------------- shared shell */

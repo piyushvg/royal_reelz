@@ -1,5 +1,5 @@
-/* Royal Reelz — Client Login portal
-   Customer login karke sirf apni photos / videos dekhta hai.
+/* Royal Reelz — Client Login portal (mobile / email OTP)
+   Customer OTP se login karke sirf apni photos / videos dekhta hai.
    Payload ke cookie-login (/api/users/login) par chalta hai, isliye ye page
    usi server se khulna chahiye jahan CMS chal raha hai. */
 (function () {
@@ -7,6 +7,7 @@
 
   var API = window.location.origin + '/api';
   var state = { photos: [], videos: [] };
+  var otp = { id: '', timer: null };
 
   function $(sel) { return document.querySelector(sel); }
   function $$(sel) { return Array.prototype.slice.call(document.querySelectorAll(sel)); }
@@ -25,9 +26,10 @@
     return fetch(API + path, options).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
         if (!res.ok) {
-          var msg = (data.errors && data.errors[0] && data.errors[0].message) || data.message || 'Something went wrong.';
+          var msg = data.error || (data.errors && data.errors[0] && data.errors[0].message) || data.message || 'Something went wrong.';
           var err = new Error(msg);
           err.status = res.status;
+          err.data = data;
           throw err;
         }
         return data;
@@ -39,25 +41,68 @@
   function showOnly(which) {
     show('portal-loading', which === 'loading');
     show('portal-login', which === 'login');
+    show('portal-expired', which === 'expired');
     show('portal-staff', which === 'staff');
     show('portal-area', which === 'area');
   }
 
   function setLede(text) { var el = $('#portal-lede'); if (el) el.textContent = text; }
+  function setHeading(a, b) {
+    var x = $('#portal-h1a'), y = $('#portal-h1b');
+    if (x) x.textContent = a;
+    if (y) y.textContent = b;
+    document.title = a + ' ' + b + ' \u2014 Royal Reelz';
+  }
+
+  function subActive(user) {
+    return !!(user && user.subscriptionEnd && new Date(user.subscriptionEnd).getTime() > Date.now());
+  }
+  function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); }
+    catch (e) { return ''; }
+  }
+  function showPlan(iso) {
+    var el = $('#portal-plan');
+    if (!el || !iso) return;
+    var days = Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+    var txt = 'Access valid till ' + fmtDate(iso) + ' \u00b7 ' + days + ' day' + (days === 1 ? '' : 's') + ' left';
+    if (days <= 30) txt += ' \u2014 contact us to renew.';
+    el.textContent = txt;
+    el.classList.toggle('is-warn', days <= 30);
+    el.hidden = false;
+  }
+  function showExpired(iso) {
+    setHeading('Client', 'Login');
+    setLede('Your gallery access has ended.');
+    var t = $('#expired-text');
+    if (t) t.textContent = iso
+      ? 'Your one-year gallery access ended on ' + fmtDate(iso) + '. Please contact us to renew it.'
+      : 'Your one-year gallery access has expired. Please contact us to renew it.';
+    api('/users/logout', { method: 'POST' }).catch(function () {});
+    showOnly('expired');
+  }
 
   function routeUser(user) {
+    document.body.classList.toggle('is-signed-in', !!(user && user.role === 'customer' && subActive(user)));
     if (!user) {
-      setLede('Sign in to view your own wedding photos and videos.');
+      setHeading('Client', 'Login');
+      setLede('Sign in with a one-time password to view your own wedding photos and videos.');
+      resetOtp();
       showOnly('login');
       return;
     }
     if (user.role !== 'customer') {
+      setHeading('Client', 'Login');
       setLede('You are signed in.');
       showOnly('staff');
       return;
     }
+    if (!subActive(user)) { showExpired(user.subscriptionEnd); return; }
+    // login ho gaya => "Client Login" heading hata do, "My Gallery" dikhao
+    setHeading('My', 'Gallery');
     setLede('Your celebration, all in one place.');
-    $('#portal-hello').textContent = 'Welcome, ' + (user.name || user.email);
+    showPlan(user.subscriptionEnd);
+    $('#portal-hello').textContent = 'Welcome, ' + (user.name || user.phone || user.email);
     showOnly('area');
     loadFiles();
   }
@@ -72,6 +117,22 @@
     return m ? m[1] : '';
   }
 
+  /* Payload kabhi absolute URL (http://localhost:9007/...) deta hai jo cookie ke bina fail hota hai.
+     Isliye hamesha is page ke apne origin se /api/customer-files/file/<filename> banate hain. */
+  function fileSrc(f, size) {
+    var name = (size && f.sizes && f.sizes[size] && f.sizes[size].filename) || f.filename;
+    if (name) return '/api/customer-files/file/' + encodeURIComponent(name);
+    var u = (size && f.sizes && f.sizes[size] && f.sizes[size].url) || f.url || '';
+    try { var x = new URL(u, window.location.origin); return x.pathname + x.search; } catch (e) { return u; }
+  }
+  function imgFallback(img) {
+    // thumbnail na bane ho to full image par aa jao
+    img.addEventListener('error', function () {
+      var full = img.getAttribute('data-full');
+      if (full && img.getAttribute('src') !== full) img.setAttribute('src', full);
+    });
+  }
+
   function loadFiles() {
     $('#portal-sub').textContent = 'Loading your files…';
     api('/customer-files?limit=500&depth=0&sort=order,-createdAt').then(function (data) {
@@ -80,17 +141,18 @@
       (data.docs || []).forEach(function (f) {
         var mime = f.mimeType || '';
         if (mime.indexOf('image/') === 0) state.photos.push(f);
-        else if (mime.indexOf('video/') === 0 || f.videoUrl) state.videos.push(f);
+        if (mime.indexOf('video/') === 0 || f.videoUrl) state.videos.push(f);
       });
       render();
     }).catch(function (err) {
-      if (err.status === 401 || err.status === 403) { routeUser(null); return; }
+      if (err.status === 403) { showExpired(null); return; }
+      if (err.status === 401) { routeUser(null); return; }
       $('#portal-sub').textContent = 'Could not load your files. Please refresh.';
     });
   }
 
   function dlLink(f) {
-    var href = f.downloadUrl || (f.url && f.mimeType ? f.url : '');
+    var href = f.downloadUrl || (f.filename && f.mimeType ? fileSrc(f) : '');
     if (!href) return '';
     var own = !f.downloadUrl;
     return '<a class="portal-dl" href="' + esc(href) + '"' +
@@ -98,18 +160,17 @@
   }
 
   function photoCard(f, i) {
-    var thumb = (f.sizes && f.sizes.thumbnail && f.sizes.thumbnail.url) || f.url;
     return '<figure class="portal-photo">' +
       '<button type="button" class="portal-open" data-i="' + i + '" aria-label="Open ' + esc(f.title) + '">' +
-      '<img src="' + esc(thumb) + '" alt="' + esc(f.title) + '" loading="lazy"></button>' +
+      '<img src="' + esc(fileSrc(f, 'thumbnail')) + '" data-full="' + esc(fileSrc(f)) + '" alt="' + esc(f.title) + '" loading="lazy"></button>' +
       '<figcaption><span>' + esc(f.title) + '</span>' + dlLink(f) + '</figcaption></figure>';
   }
 
   function videoCard(f) {
     var media;
     var mime = f.mimeType || '';
-    if (mime.indexOf('video/') === 0 && f.url) {
-      media = '<video controls playsinline preload="metadata" src="' + esc(f.url) + '"></video>';
+    if (mime.indexOf('video/') === 0 && f.filename) {
+      media = '<video controls playsinline preload="metadata" src="' + esc(fileSrc(f)) + '"></video>';
     } else if (youtubeId(f.videoUrl)) {
       media = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(youtubeId(f.videoUrl)) +
         '?rel=0" title="' + esc(f.title) + '" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>';
@@ -121,7 +182,8 @@
     }
     return '<article class="portal-video">' +
       '<div class="portal-frame">' + media + '</div>' +
-      '<div class="portal-meta"><h3>' + esc(f.title) + '</h3>' + dlLink(f) + '</div>' +
+      '<div class="portal-meta"><h3>' + esc(f.title) + '</h3>' +
+        (f.videoUrl ? '<a class="portal-dl" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Open</a>' : dlLink(f)) + '</div>' +
       (f.note ? '<p class="portal-note">' + esc(f.note) + '</p>' : '') + '</article>';
   }
 
@@ -129,6 +191,7 @@
     $('#count-photos').textContent = state.photos.length;
     $('#count-videos').textContent = state.videos.length;
     $('#grid-photos').innerHTML = state.photos.map(photoCard).join('');
+    $$('#grid-photos img').forEach(imgFallback);
     $('#grid-videos').innerHTML = state.videos.map(videoCard).join('');
     show('empty-photos', !state.photos.length);
     show('empty-videos', !state.videos.length);
@@ -192,7 +255,7 @@
     if (!n) return;
     cur = (i + n) % n;
     var f = state.photos[cur];
-    lb.querySelector('img').src = f.url;
+    lb.querySelector('img').src = fileSrc(f);
     lb.querySelector('img').alt = f.title || '';
     lb.querySelector('.portal-lb-c').textContent = (cur + 1) + ' / ' + n + (f.title ? '  ·  ' + f.title : '');
   }
@@ -225,39 +288,95 @@
     }
   });
 
-  var form = document.getElementById('portal-form');
-  if (form) {
-    form.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var err = $('#portal-error');
-      var btn = $('#portal-submit');
-      err.hidden = true;
-      var email = form.elements.email.value.trim();
-      var password = form.elements.password.value;
-      if (!email || !password) {
-        err.textContent = 'Please enter your email and password.';
-        err.hidden = false;
-        return;
-      }
-      btn.disabled = true;
-      btn.textContent = 'Signing in…';
-      api('/users/login', { method: 'POST', body: JSON.stringify({ email: email, password: password }) })
-        .then(function (data) {
-          form.reset();
-          routeUser(data.user);
-        })
-        .catch(function (error) {
-          err.textContent = error.status === 401 || error.status === 400
-            ? 'Email or password is incorrect.'
-            : error.message;
-          err.hidden = false;
-        })
-        .then(function () {
-          btn.disabled = false;
-          btn.textContent = 'Sign in';
-        });
-    });
+  /* ----------------------------------------------------- OTP login */
+  function msg(id, text) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text || '';
+    el.hidden = !text;
   }
+  function resetOtp() {
+    clearInterval(otp.timer);
+    show('otp-id-form', true);
+    show('otp-code-form', false);
+    msg('portal-error', ''); msg('otp-error', '');
+    var c = document.getElementById('pl-code'); if (c) c.value = '';
+  }
+  function countdown(sec) {
+    var b = document.getElementById('otp-resend');
+    clearInterval(otp.timer);
+    function tick() {
+      if (sec <= 0) { clearInterval(otp.timer); b.disabled = false; b.textContent = 'Resend OTP'; return; }
+      b.disabled = true; b.textContent = 'Resend in ' + sec + 's'; sec--;
+    }
+    tick();
+    otp.timer = setInterval(tick, 1000);
+  }
+  function validId(v) {
+    v = String(v || '').trim();
+    if (v.indexOf('@') > -1) return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+    return v.replace(/\D/g, '').length >= 10;
+  }
+  function sendCode(btn, label, errId) {
+    msg(errId, '');
+    btn.disabled = true;
+    btn.textContent = 'Sending\u2026';
+    return api('/otp/request', { method: 'POST', body: JSON.stringify({ identifier: otp.id }) })
+      .then(function (d) {
+        show('otp-id-form', false);
+        show('otp-code-form', true);
+        $('#otp-sent-to').textContent = otp.id;
+        msg('otp-error', '');
+        countdown(d.resendIn || 60);
+        var c = document.getElementById('pl-code'); c.value = ''; c.focus();
+        return true;
+      })
+      .catch(function (e) {
+        if (e.status === 429 && errId === 'otp-error') countdown((e.data && e.data.retryAfter) || 60);
+        msg(errId, e.message);
+        return false;
+      })
+      .then(function (ok) {
+        if (btn.id !== 'otp-resend') { btn.textContent = label; btn.disabled = false; }
+        else if (!ok) { btn.textContent = label; }
+        return ok;
+      });
+  }
+
+  var idForm = document.getElementById('otp-id-form');
+  if (idForm) idForm.addEventListener('submit', function (e) {
+    e.preventDefault();
+    var v = idForm.elements.identifier.value.trim();
+    if (!validId(v)) { msg('portal-error', 'Please enter a valid 10-digit mobile number.'); return; }
+    otp.id = v;
+    sendCode($('#portal-submit'), 'Send OTP', 'portal-error');
+  });
+
+  var codeForm = document.getElementById('otp-code-form');
+  if (codeForm) {
+    codeForm.elements.code.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '').slice(0, 6);
+    });
+    codeForm.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var code = codeForm.elements.code.value;
+      var btn = $('#otp-submit');
+      if (code.length !== 6) { msg('otp-error', 'Enter the 6-digit OTP.'); return; }
+      msg('otp-error', '');
+      btn.disabled = true; btn.textContent = 'Verifying\u2026';
+      api('/otp/verify', { method: 'POST', body: JSON.stringify({ identifier: otp.id, code: code }) })
+        .then(function (d) { clearInterval(otp.timer); routeUser(d.user); })
+        .catch(function (err) {
+          if (err.status === 403) { showExpired(err.data && err.data.subscriptionEnd); return; }
+          msg('otp-error', err.message);
+        })
+        .then(function () { btn.disabled = false; btn.textContent = 'Verify & sign in'; });
+    });
+    $('#otp-resend').addEventListener('click', function () { sendCode(this, 'Resend OTP', 'otp-error'); });
+    $('#otp-change').addEventListener('click', resetOtp);
+  }
+  var back = document.getElementById('expired-back');
+  if (back) back.addEventListener('click', function () { routeUser(null); });
 
   /* -------------------------------------------------------- start */
   api('/users/me').then(function (data) { routeUser(data.user || null); })

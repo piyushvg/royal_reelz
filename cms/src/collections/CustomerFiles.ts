@@ -1,14 +1,14 @@
 import { APIError } from 'payload'
 import type { CollectionConfig } from 'payload'
 
-import { isLoggedIn, isStaffUser } from '../access'
+import { isLoggedIn, isStaffUser, isSubscriptionActive } from '../access'
 import { orderField } from '../fields'
 import { siteURL } from '../preview'
 
 /**
- * Customer ki apni photos / videos.
- * Customer website ke "Client Login" (portal.html) se sirf wahi dekh sakta hai jo uske naam par hai.
- * Photo / video file seedhe upload karo, ya video ka link (YouTube / Vimeo / Drive) paste karo.
+ * A customer's own photos / videos.
+ * Customers see only their own files, through the website Client Login (portal.html).
+ * Upload a photo / video file directly, or paste a video link (YouTube / Vimeo / Drive).
  */
 export const CustomerFiles: CollectionConfig = {
   slug: 'customer-files',
@@ -18,13 +18,15 @@ export const CustomerFiles: CollectionConfig = {
     defaultColumns: ['title', 'customer', 'order', 'updatedAt'],
     group: 'Customers',
     description:
-      'Customer chuno, phir photo / video upload karo ya video ka link paste karo. Customer ko sirf apni files dikhti hain.',
+      'Choose a customer, then upload a photo / video or paste a video link. Customers only see their own files.',
     preview: () => siteURL('portal.html'),
   },
   access: {
     read: ({ req: { user } }) => {
       if (!user) return false
       if (isStaffUser(user as any)) return true
+      // subscription khatam => customer ko files nahi milengi (list bhi nahi, file download bhi nahi)
+      if (!isSubscriptionActive(user)) return false
       return { customer: { equals: user.id } }
     },
     create: isLoggedIn,
@@ -40,10 +42,28 @@ export const CustomerFiles: CollectionConfig = {
     imageSizes: [{ name: 'thumbnail', width: 480, height: 480, position: 'centre' }],
   },
   hooks: {
+    // File URLs are always relative to this site (/api/customer-files/file/<name>), so previews and downloads
+    // keep working even if NEXT_PUBLIC_SERVER_URL points to a different host or port.
+    afterRead: [
+      ({ doc }) => {
+        const d = doc as any
+        if (!d?.filename) return doc
+        const base = '/api/customer-files/file/'
+        const path = (name: string) => base + encodeURIComponent(name)
+        d.url = path(d.filename)
+        if (d.sizes) {
+          for (const key of Object.keys(d.sizes)) {
+            if (d.sizes[key]?.filename) d.sizes[key].url = path(d.sizes[key].filename)
+          }
+        }
+        d.thumbnailURL = path(d.sizes?.thumbnail?.filename || d.filename)
+        return d
+      },
+    ],
     beforeValidate: [
       ({ data, operation, req }) => {
         if (operation === 'create' && !req.file && !(data as any)?.videoUrl) {
-          throw new APIError('Photo / video file upload karo, ya video ka link paste karo.', 400)
+          throw new APIError('Upload a photo / video file, or paste a video link.', 400)
         }
         return data
       },
@@ -57,20 +77,20 @@ export const CustomerFiles: CollectionConfig = {
       required: true,
       index: true,
       filterOptions: { role: { equals: 'customer' } },
-      admin: { description: 'Sirf "Customer" role wale users yahan dikhte hain. Pehle Users me customer banao.' },
+      admin: { description: 'Only users with the "Customer" role are listed. Create the customer under Users first.' },
     },
     { name: 'title', type: 'text', required: true },
     {
       name: 'videoUrl',
       label: 'Video link (optional)',
       type: 'text',
-      admin: { description: 'YouTube (unlisted), Vimeo ya koi bhi link. Video file upload karni ho to ye khaali chhodo.' },
+      admin: { description: 'YouTube (unlisted), Vimeo or any other link. Leave empty if you are uploading a video file.' },
     },
     {
       name: 'downloadUrl',
       label: 'Download link (optional)',
       type: 'text',
-      admin: { description: 'Full-quality files ka Google Drive / WeTransfer link.' },
+      admin: { description: 'Google Drive / WeTransfer link for the full-quality files.' },
     },
     { name: 'note', label: 'Note for customer (optional)', type: 'textarea' },
     orderField,

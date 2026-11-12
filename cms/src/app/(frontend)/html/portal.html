@@ -54,8 +54,8 @@
     <section class="page-head">
       <p class="eyebrow gold">Royal Reelz</p>
       <h1 class="display">
-        <span class="gold">Client</span>
-        <span>Login</span>
+        <span class="gold" id="portal-h1a">Client</span>
+        <span id="portal-h1b">Login</span>
       </h1>
       <span class="ornament gold"><i></i><b>&#10070;</b><i></i></span>
       <p class="lede" id="portal-lede">Sign in to view your own wedding photos and videos.</p>
@@ -64,21 +64,43 @@
     <section class="portal">
       <div class="portal-wrap">
 
-        <!-- login -->
+        <!-- login: step 1 = mobile / email -->
         <div class="portal-card" id="portal-login" hidden>
-          <form class="portal-form" id="portal-form" novalidate>
+          <form class="portal-form" id="otp-id-form" novalidate>
             <div class="field">
-              <label for="pl-email">Email</label>
-              <input id="pl-email" name="email" type="email" autocomplete="username" required placeholder="you@example.com">
-            </div>
-            <div class="field">
-              <label for="pl-pass">Password</label>
-              <input id="pl-pass" name="password" type="password" autocomplete="current-password" required placeholder="Your password">
+              <label for="pl-id">Mobile number</label>
+              <input id="pl-id" name="identifier" type="text" autocomplete="tel" inputmode="tel" required placeholder="10-digit mobile number">
             </div>
             <p class="portal-msg" id="portal-error" role="alert" hidden></p>
-            <button class="btn-solid" type="submit" id="portal-submit">Sign in</button>
-            <p class="portal-help">Don&#8217;t have a login yet? Contact us and we&#8217;ll set one up for you.</p>
+            <button class="btn-solid" type="submit" id="portal-submit">Send OTP</button>
+            <p class="portal-help">Enter the mobile number registered with us. We&#8217;ll send you a 6-digit OTP &#8212; no password needed.</p>
           </form>
+
+          <!-- step 2 = code -->
+          <form class="portal-form" id="otp-code-form" novalidate hidden>
+            <p class="portal-help portal-sent">Enter the 6-digit OTP sent to <strong id="otp-sent-to"></strong>.</p>
+            <div class="field">
+              <label for="pl-code">OTP</label>
+              <input id="pl-code" name="code" class="portal-code" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="6"
+                autocomplete="one-time-code" required placeholder="&#8226; &#8226; &#8226; &#8226; &#8226; &#8226;">
+            </div>
+            <p class="portal-msg" id="otp-error" role="alert" hidden></p>
+            <button class="btn-solid" type="submit" id="otp-submit">Verify &amp; sign in</button>
+            <div class="portal-row">
+              <button class="portal-link" type="button" id="otp-resend" disabled>Resend OTP</button>
+              <button class="portal-link" type="button" id="otp-change">Change number</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- subscription expired -->
+        <div class="portal-card" id="portal-expired" hidden>
+          <h2 class="portal-card-title">Your access has ended</h2>
+          <p class="portal-staff-text" id="expired-text">Your one-year gallery access has expired. Please contact us to renew it.</p>
+          <div class="portal-actions">
+            <a class="btn-solid" href="contact.html">Contact us</a>
+            <button class="portal-link" type="button" id="expired-back">Back</button>
+          </div>
         </div>
 
         <!-- staff notice -->
@@ -99,6 +121,8 @@
             </div>
             <button class="portal-link" type="button" data-logout>Sign out</button>
           </div>
+
+          <p class="portal-plan" id="portal-plan" hidden></p>
 
           <div class="portal-tabs" role="tablist">
             <button type="button" class="portal-tab is-on" data-tab="photos" role="tab">Photos <span id="count-photos">0</span></button>
@@ -202,10 +226,9 @@
   </a>
 
   <script src="js/jquery-3.7.1.min.js"></script>
-  <script>window.jQuery || document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>')</script>
+  <script>window.jQuery||document.write('<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.7.1/jquery.min.js"><\/script>')</script>
   <script src="js/cms.js"></script>
-    <script src="js/main.js"></script>
+  <script src="js/main.js"></script>
   <script src="js/portal.js"></script>
 </body>
-
 </html>

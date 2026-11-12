@@ -28,7 +28,7 @@ export const Contact: GlobalConfig = {
       defaultValue: '/api/enquiry',
       admin: {
         description:
-          'Contact form yahan post hoti hai. Submissions Contact enquiries list mein dikhti hain. Default: /api/enquiry',
+          'The contact form posts here. Submissions appear in the Contact enquiries list. Default: /api/enquiry',
       },
     },
   ],

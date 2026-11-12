@@ -8,6 +8,7 @@ import sharp from 'sharp'
 import { Awards } from './collections/Awards'
 import { CustomerFiles } from './collections/CustomerFiles'
 import { Enquiries } from './collections/Enquiries'
+import { LoginOtps } from './collections/LoginOtps'
 import { Media } from './collections/Media'
 import { Photos } from './collections/Photos'
 import { Places } from './collections/Places'
@@ -20,6 +21,7 @@ import { Videos } from './collections/Videos'
 import { ensureLiveSchema } from './ensureLiveSchema'
 import { enquiryEndpoint } from './endpoints/enquiry'
 import { frontendEndpoint } from './endpoints/frontend'
+import { otpRequestEndpoint, otpVerifyEndpoint } from './endpoints/otp'
 import { migrations } from './migrations'
 import { About } from './globals/About'
 import { Contact } from './globals/Contact'
@@ -58,9 +60,9 @@ export default buildConfig({
       beforeDashboard: ['/components/BeforeDashboard#BeforeDashboard'],
     },
   },
-  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries, CustomerFiles],
+  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries, CustomerFiles, LoginOtps],
   globals: [Site, About, Destinations, Gallery, Contact],
-  endpoints: [frontendEndpoint, enquiryEndpoint],
+  endpoints: [frontendEndpoint, enquiryEndpoint, otpRequestEndpoint, otpVerifyEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
   serverURL: process.env.NEXT_PUBLIC_SERVER_URL || 'http://localhost:9007',
