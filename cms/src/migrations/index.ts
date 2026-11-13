@@ -2,6 +2,7 @@ import * as migration_20261016_211518_initial from './20261016_211518_initial';
 import * as migration_20261023_164500_users_name_role from './20261023_164500_users_name_role';
 import * as migration_20261023_171000_customer_files from './20261023_171000_customer_files';
 import * as migration_20261112_151800_customer_otp from './20261112_151800_customer_otp';
+import * as migration_20261113_132500_user_name_parts from './20261113_132500_user_name_parts';
 
 export const migrations = [
   {
@@ -23,5 +24,10 @@ export const migrations = [
     up: migration_20261112_151800_customer_otp.up,
     down: migration_20261112_151800_customer_otp.down,
     name: '20261112_151800_customer_otp'
+  },
+  {
+    up: migration_20261113_132500_user_name_parts.up,
+    down: migration_20261113_132500_user_name_parts.down,
+    name: '20261113_132500_user_name_parts'
   },
 ];

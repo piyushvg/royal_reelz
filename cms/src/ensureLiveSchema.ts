@@ -21,8 +21,20 @@ export async function ensureLiveSchema(db: SqlRunner) {
   if (!userColumns.has('role')) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`role\` text DEFAULT 'admin' NOT NULL`)
   }
+  if (!userColumns.has('first_name')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`first_name\` text`)
+  }
+  if (!userColumns.has('middle_name')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`middle_name\` text`)
+  }
+  if (!userColumns.has('last_name')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`last_name\` text`)
+  }
   if (!userColumns.has('phone')) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`phone\` text`)
+  }
+  if (!userColumns.has('phone2')) {
+    await db.run(sql`ALTER TABLE \`users\` ADD \`phone2\` text`)
   }
   if (!userColumns.has('subscription_start')) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`subscription_start\` text`)
@@ -34,6 +46,7 @@ export async function ensureLiveSchema(db: SqlRunner) {
     await db.run(sql`ALTER TABLE \`users\` ADD \`renew_one_year\` integer DEFAULT 0`)
   }
   await db.run(sql`CREATE INDEX IF NOT EXISTS \`users_phone_idx\` ON \`users\` (\`phone\`)`)
+  await db.run(sql`CREATE INDEX IF NOT EXISTS \`users_phone2_idx\` ON \`users\` (\`phone2\`)`)
   await db.run(sql`CREATE INDEX IF NOT EXISTS \`users_subscription_end_idx\` ON \`users\` (\`subscription_end\`)`)
 
   await db.run(sql`CREATE TABLE IF NOT EXISTS \`login_otps\` (
