@@ -4,3 +4,4 @@ media/
 *.db
 *.db-*
 .env
+customer-media/

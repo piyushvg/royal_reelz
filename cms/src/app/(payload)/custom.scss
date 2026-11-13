@@ -253,3 +253,33 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
 .collection-edit--customer-files .document-fields__edit > :has(.file-field__upload) { order: 99; }
 .collection-edit--users .document-fields__edit > .render-fields > :has(#field-firstName) { order: -2; }
 .collection-edit--users .document-fields__edit > .render-fields > :has(#field-phone) { order: -1; }
+
+/* ---------- login page: space between "Forgot password?" and the Login button ---------- */
+.login__form a[href*="forgot"],
+.template-minimal a[href*="forgot"] {
+  display: inline-block;
+  margin: 0.5rem 0 1.5rem;
+}
+.login__form .form-submit,
+.template-minimal .form-submit { margin-top: 0.5rem; }
+
+/* ---------- forms: consistent spacing + alignment (incl. dropdown / select fields) ---------- */
+.document-fields__edit .field-type,
+.document-fields__sidebar-fields .field-type { margin-bottom: 1.25rem; }
+.document-fields__edit .row,
+.document-fields__edit .field-type.row { align-items: flex-start; column-gap: 1rem; }
+.document-fields__edit .row > .field-type { margin-bottom: 1.25rem; }
+
+/* every select / relationship dropdown has the same height and padding as the text inputs */
+.field-type .rs__control,
+.field-type .react-select .rs__control {
+  min-height: 40px;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+.field-type .rs__value-container { padding: 0 12px; }
+.field-type .rs__single-value,
+.field-type .rs__placeholder { margin: 0; }
+.field-type .rs__indicator { padding: 0 8px; }
+.field-type .field-label { margin-bottom: 0.4rem; display: block; }
+.field-type .field-description { margin-top: 0.4rem; }

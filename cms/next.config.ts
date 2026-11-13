@@ -9,7 +9,14 @@ const nextConfig: NextConfig = {
   agentRules: false,
   async rewrites() {
     return {
-      beforeFiles: [{ source: '/', destination: '/index.html' }],
+      beforeFiles: [
+        { source: '/', destination: '/index.html' },
+        // Short customer links open the portal directly
+        { source: '/portal', destination: '/portal.html' },
+        { source: '/login', destination: '/portal.html' },
+        { source: '/customer', destination: '/portal.html' },
+        { source: '/client', destination: '/portal.html' },
+      ],
     }
   },
   images: {
