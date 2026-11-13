@@ -4,4 +4,5 @@ node_modules
 *.db
 *.db-*
 media
+customer-media
 .DS_Store

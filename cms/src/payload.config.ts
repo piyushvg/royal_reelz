@@ -39,6 +39,7 @@ export default buildConfig({
     importMap: {
       baseDir: path.resolve(dirname),
     },
+    
     meta: {
       titleSuffix: '— Royal Reelz CMS',
       description: 'Royal Reelz CMS — manage the Royal Reelz luxury wedding films & photography website.',
@@ -52,6 +53,7 @@ export default buildConfig({
     },
     theme: 'light',
     components: {
+      providers: ['/components/CustomerRedirect#CustomerRedirect'],
       beforeNavLinks: ['/components/SidebarLogo#SidebarLogo'],
       graphics: {
         Logo: '/components/Logo#Logo',
