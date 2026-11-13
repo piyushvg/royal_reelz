@@ -1,3 +1,4 @@
+// Entry point for the CMS container (deploy pipeline test after server move).
 import { createServer } from 'http'
 import next from 'next'
 
