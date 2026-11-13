@@ -52,10 +52,11 @@ jobs:
           host: ${{ secrets.OCI_HOST }}
           username: ${{ secrets.OCI_USER }}
           key: ${{ secrets.OCI_SSH_KEY }}
-          script: |
+          script: | 
+            set -e
             cd /opt/webapp
-            docker compose pull royal-reelz
-            docker compose up -d --remove-orphans royal-reelz
+            docker compose pull webapp-royal-reelz
+            docker compose up -d --remove-orphans webapp-royal-reelz
             docker image prune -f
             # Notify failure must not fail the deploy (same as mobile release.sh).
       - name: Notify Zoho Cliq
