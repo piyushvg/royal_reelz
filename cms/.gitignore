@@ -4,3 +4,5 @@ media/
 *.db
 *.db-*
 .env
+cms/customer-media/*
+cms/customer-media-temp/*
