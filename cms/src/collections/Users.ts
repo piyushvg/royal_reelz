@@ -20,6 +20,12 @@ function addOneYear(from: Date) {
   return d
 }
 
+const validMobile = (value?: string | null): true | string => {
+  if (!value) return true
+  const d = String(value).replace(/\D/g, '')
+  return d.length >= 10 && d.length <= 13 ? true : 'Enter a valid 10-digit mobile number.'
+}
+
 export const Users: CollectionConfig = {
   slug: 'users',
   labels: { singular: 'User', plural: 'Users' },
@@ -170,6 +176,7 @@ export const Users: CollectionConfig = {
           type: 'text',
           label: "Husband's mobile number",
           index: true,
+          validate: validMobile,
           access: { create: staffOnly, update: staffOnly },
           admin: { placeholder: '9322451778' },
         },
@@ -178,6 +185,7 @@ export const Users: CollectionConfig = {
           type: 'text',
           label: "Wife's mobile number",
           index: true,
+          validate: validMobile,
           access: { create: staffOnly, update: staffOnly },
           admin: { placeholder: '9322451779' },
         },
