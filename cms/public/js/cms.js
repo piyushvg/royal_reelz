@@ -75,6 +75,23 @@
     if (ul && out) ul.innerHTML = out;
   }
 
+  // header "Client Login" = small user icon button (label in tooltip), not a text link
+  function iconLogin(a, label) {
+    if (!document.getElementById('rr-portal-icon-css')) {
+      var st = document.createElement('style');
+      st.id = 'rr-portal-icon-css';
+      st.textContent = '.site-nav a.nav-portal{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;' +
+        'padding:0;border:1px solid var(--gold,#c9a45c);border-radius:50%;line-height:0;transition:background .3s ease,color .3s ease}' +
+        '.site-nav a.nav-portal svg{width:16px;height:16px}.site-nav a.nav-portal:hover{background:var(--gold,#c9a45c)}' +
+        '.site-nav a.nav-portal::after{display:none!important}';
+      document.head.appendChild(st);
+    }
+    a.classList.add('nav-portal');
+    a.title = label;
+    a.setAttribute('aria-label', label);
+    a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+  }
+
   // "Client Login" link header + footer menu me (CMS menu me na ho to bhi dikhe)
   function ensurePortalLink() {
     var here = (location.pathname.split('/').pop() || '').toLowerCase();
@@ -90,6 +107,7 @@
         if (p[1]) a.className = p[1] + (here === 'portal.html' ? ' is-current' : '');
         nav.appendChild(a);
       }
+      if (p[0] === '.site-nav') iconLogin(a, 'Client Login');
       links.push(a);
     });
 
@@ -105,6 +123,7 @@
         if (!live) return;
         links.forEach(function (a) {
           if (here === 'portal.html') a.style.display = 'none';
+          else if (a.classList.contains('nav-portal')) { a.title = 'My Account'; a.setAttribute('aria-label', 'My Account'); }
           else a.textContent = 'My Account';
         });
       })

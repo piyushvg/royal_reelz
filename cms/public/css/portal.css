@@ -147,22 +147,34 @@
 .portal-lb-meta { font-size: 11px; letter-spacing: 0.14em; opacity: 0.7; }
 
 /* ---------- customer mode: only their own portal (no site menu / links) ---------- */
-/* "My Gallery" title block (kept, just refined) */
+/* "My Gallery" title block: compact, left-aligned, no blank side areas */
 body.is-signed-in .page-head {
-  padding: calc(var(--header-h, 78px) + 2.75rem) 2rem 1.5rem;
-  background: linear-gradient(180deg, var(--surface-container, #f9ece8) 0%, var(--surface, #fff8f6) 100%);
+  width: min(1100px, calc(100% - 4rem)); margin: 0 auto; text-align: left;
+  padding: calc(var(--header-h, 78px) + 1.75rem) 0 0.25rem; background: none;
 }
-body.is-signed-in .page-head .eyebrow { margin-bottom: 0.75rem; letter-spacing: 0.4em; }
+body.is-signed-in .page-head .eyebrow { margin: 0 0 0.3rem; letter-spacing: 0.4em; }
 body.is-signed-in .page-head .display {
-  display: inline-flex; align-items: baseline; gap: 0.22em; margin: 0 0 0.9rem;
-  font-size: clamp(2.4rem, 5.2vw, 3.6rem); line-height: 1.05; font-weight: 400;
+  display: block; margin: 0; font-size: clamp(2rem, 4vw, 2.75rem); line-height: 1.1; font-weight: 400;
 }
-body.is-signed-in .page-head .display .gold { font-style: italic; }
-body.is-signed-in .page-head .ornament { margin-bottom: 0.9rem; }
-body.is-signed-in .page-head .lede {
-  font-family: var(--serif); font-style: italic; font-size: 1.1rem; letter-spacing: 0.02em; opacity: 0.85;
+body.is-signed-in .page-head .display span { display: inline; }
+body.is-signed-in .page-head .display .gold { font-style: italic; margin-right: 0.2em; }
+body.is-signed-in .page-head .ornament,
+body.is-signed-in .page-head .lede { display: none; }
+/* Sign out sits in the header, top right */
+body.is-signed-in .portal-signout {
+  position: fixed; z-index: 60; right: 2rem; top: calc(var(--header-h, 78px) / 2 - 18px);
+  height: 36px; padding: 0 1.1rem; display: inline-flex; align-items: center; gap: 0.5rem;
+  background: transparent; border: 1px solid var(--gold); border-radius: 999px; color: var(--primary);
+  font-size: 10px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; cursor: pointer;
+  transition: background 0.3s ease, color 0.3s ease;
 }
-body.is-signed-in .portal { padding-top: 1.5rem; }
+body.is-signed-in .portal-signout::before {
+  content: ''; width: 14px; height: 14px; background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E") center / contain no-repeat;
+          mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.6'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+body.is-signed-in .portal-signout:hover { background: var(--gold); color: var(--primary); }
+body.is-signed-in .portal { padding-top: 0.75rem; }
 body.is-signed-in .portal-top .portal-eyebrow,
 body.is-signed-in .portal-top .eyebrow { display: none; }
 body.is-signed-in .site-header .site-nav,
@@ -187,7 +199,8 @@ body.is-signed-in .site-foot .socials { margin-top: 0; }
 @media (max-width: 680px) {
   .portal { padding: 0.5rem 1rem 4rem; }
   body.is-signed-in .portal { padding-top: 1rem; }
-  body.is-signed-in .page-head { padding: calc(var(--header-h, 78px) + 1.75rem) 1.25rem 1rem; }
+  body.is-signed-in .page-head { width: calc(100% - 2rem); padding: calc(var(--header-h, 78px) + 1.25rem) 0 0; }
+  body.is-signed-in .portal-signout { right: 1rem; padding: 0 0.8rem; }
   .portal-card { padding: 2rem 1.5rem; }
   .portal-grid { column-count: 2; column-gap: 0.625rem; }
   .portal-tile { margin-bottom: 0.625rem; padding: 6px; }
