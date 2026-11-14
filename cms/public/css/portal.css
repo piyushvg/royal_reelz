@@ -108,6 +108,19 @@
 .portal-videos { display: grid; grid-template-columns: repeat(3, 320px); gap: 1.5rem; justify-content: center; }
 .portal-video { width: 320px; max-width: 100%; padding: 10px; background: var(--mount); border: 1px solid var(--hairline); }
 .portal-frame { position: relative; width: 300px; height: 300px; max-width: 100%; background: #000; overflow: hidden; }
+.portal-play { position: absolute; inset: 0; display: block; background: #1c0006; text-decoration: none; cursor: pointer; }
+.portal-play img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform 0.7s ease, opacity 0.3s ease; }
+.portal-play:hover img { transform: scale(1.04); opacity: 0.85; }
+.portal-play-btn {
+  position: absolute; left: 50%; top: 50%; width: 64px; height: 64px; margin: -32px 0 0 -32px; border-radius: 50%;
+  background: rgba(44, 0, 9, 0.75); border: 1px solid var(--gold); transition: background 0.3s ease;
+}
+.portal-play-btn::after {
+  content: ''; position: absolute; left: 26px; top: 20px; border-style: solid; border-width: 12px 0 12px 19px;
+  border-color: transparent transparent transparent var(--gold);
+}
+.portal-play:hover .portal-play-btn { background: rgba(44, 0, 9, 0.95); }
+.portal-ext-t { position: absolute; left: 0; right: 0; bottom: 1.1rem; text-align: center; color: #fff; font-size: 11px; letter-spacing: 0.22em; text-transform: uppercase; }
 .portal-frame video, .portal-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; object-fit: cover; background: #000; }
 .portal-ext { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: var(--gold-soft); font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; }
 .portal-meta { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 0.75rem; }

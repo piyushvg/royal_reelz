@@ -188,13 +188,13 @@
     if (mime.indexOf('video/') === 0 && f.filename) {
       media = '<video controls playsinline preload="metadata" src="' + esc(fileSrc(f)) + '"></video>';
     } else if (youtubeId(f.videoUrl)) {
-      media = '<iframe src="https://www.youtube-nocookie.com/embed/' + esc(youtubeId(f.videoUrl)) +
-        '?rel=0" title="' + esc(f.title) + '" allow="accelerometer; encrypted-media; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>';
-    } else if (vimeoId(f.videoUrl)) {
-      media = '<iframe src="https://player.vimeo.com/video/' + esc(vimeoId(f.videoUrl)) +
-        '" title="' + esc(f.title) + '" allow="fullscreen; picture-in-picture" allowfullscreen loading="lazy"></iframe>';
+      // thumbnail + play button: one click opens the video directly on YouTube
+      media = '<a class="portal-play" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener" aria-label="Play ' + esc(f.title) + '">' +
+        '<img src="https://i.ytimg.com/vi/' + esc(youtubeId(f.videoUrl)) + '/hqdefault.jpg" alt="' + esc(f.title) + '" loading="lazy">' +
+        '<span class="portal-play-btn" aria-hidden="true"></span></a>';
     } else {
-      media = '<a class="portal-ext" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Watch video &#8599;</a>';
+      media = '<a class="portal-ext portal-play" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">' +
+        '<span class="portal-play-btn" aria-hidden="true"></span><span class="portal-ext-t">Watch video</span></a>';
     }
     return '<article class="portal-video">' +
       '<div class="portal-frame">' + media + '</div>' +
