@@ -15,7 +15,7 @@ export const CustomerFiles: CollectionConfig = {
   labels: { singular: 'Customer file', plural: 'Customer files' },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'customer', 'order', 'updatedAt'],
+    defaultColumns: ['title', 'viewLink', 'customer', 'order', 'updatedAt'],
     group: 'Customers',
     description:
       'Choose a customer, then upload a photo / video or paste a video link. Customers only see their own files.',
@@ -70,6 +70,24 @@ export const CustomerFiles: CollectionConfig = {
     ],
   },
   fields: [
+    // Edit screen: big preview + "open in new tab" link for the saved photo / video
+    {
+      name: 'filePreview',
+      type: 'ui',
+      admin: { components: { Field: '/components/FilePreviewField#FilePreviewField' } },
+    },
+    // List column: click to open the photo / video (not stored in the database)
+    {
+      name: 'viewLink',
+      label: 'Open',
+      type: 'text',
+      virtual: true,
+      admin: {
+        condition: () => false,
+        disableBulkEdit: true,
+        components: { Cell: '/components/FileLinkCell#FileLinkCell' },
+      },
+    },
     {
       name: 'customer',
       type: 'relationship',
