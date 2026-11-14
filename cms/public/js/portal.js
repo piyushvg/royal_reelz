@@ -386,7 +386,11 @@
       msg('otp-error', '');
       btn.disabled = true; btn.textContent = 'Verifying\u2026';
       api('/otp/verify', { method: 'POST', body: JSON.stringify({ identifier: otp.id, code: code }) })
-        .then(function (d) { clearInterval(otp.timer); routeUser(d.user); })
+        .then(function (d) {
+          clearInterval(otp.timer);
+          try { sessionStorage.setItem('rr_portal', '1'); } catch (e) {}
+          routeUser(d.user);
+        })
         .catch(function (err) {
           if (err.status === 403) { showExpired(err.data && err.data.subscriptionEnd); return; }
           msg('otp-error', err.message);
@@ -400,6 +404,14 @@
   if (back) back.addEventListener('click', function () { routeUser(null); });
 
   /* -------------------------------------------------------- start */
-  api('/users/me').then(function (data) { routeUser(data.user || null); })
-    .catch(function () { routeUser(null); });
+  api('/users/me').then(function (data) {
+    var u = data.user || null;
+    var fresh = true;
+    try { fresh = sessionStorage.getItem('rr_portal') !== '1'; } catch (e) {}
+    // A customer who left the site and opened it again (new tab / new visit) must sign in again.
+    if (u && u.role === 'customer' && fresh) {
+      return api('/users/logout', { method: 'POST' }).catch(function () {}).then(function () { routeUser(null); });
+    }
+    routeUser(u);
+  }).catch(function () { routeUser(null); });
 })();

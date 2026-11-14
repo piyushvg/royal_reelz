@@ -258,14 +258,13 @@ export const otpVerifyEndpoint: Endpoint = {
     const session: any = await payload.login({ collection: 'users', data: { email: customer.email, password } })
     if (!session?.token) return json({ error: 'Could not sign you in. Please try again.' }, 500)
 
-    const maxAge = Math.max(60, Math.min(Math.floor((session.exp ?? Date.now() / 1000 + 604800) - Date.now() / 1000), 60 * 60 * 24 * 7))
     const prefix = (payload.config as any).cookiePrefix || 'payload'
     const cookie = [
       `${prefix}-token=${session.token}`,
       'Path=/',
       'HttpOnly',
       'SameSite=Lax',
-      `Max-Age=${maxAge}`,
+      // no Max-Age / Expires => session cookie: the customer must sign in again after closing the browser
       process.env.NODE_ENV === 'production' ? 'Secure' : '',
     ]
       .filter(Boolean)

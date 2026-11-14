@@ -100,6 +100,9 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) {
         if (!d || !d.user || d.user.role !== 'customer') return;
+        var live = false;
+        try { live = sessionStorage.getItem('rr_portal') === '1'; } catch (e) {}
+        if (!live) return;
         links.forEach(function (a) {
           if (here === 'portal.html') a.style.display = 'none';
           else a.textContent = 'My Account';
