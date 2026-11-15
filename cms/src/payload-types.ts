@@ -434,6 +434,7 @@ export interface Enquiry {
  */
 export interface CustomerFile {
   id: number;
+  viewLink?: string | null;
   /**
    * Only users with the "Customer" role are listed. Create the customer under Users first.
    */
@@ -794,6 +795,7 @@ export interface EnquiriesSelect<T extends boolean = true> {
  * via the `definition` "customer-files_select".
  */
 export interface CustomerFilesSelect<T extends boolean = true> {
+  viewLink?: T;
   customer?: T;
   title?: T;
   videoUrl?: T;
