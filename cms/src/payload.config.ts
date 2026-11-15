@@ -52,11 +52,13 @@ export default buildConfig({
     },
     theme: 'light',
     components: {
+      providers: ['/components/CustomerRedirect#CustomerRedirect'],
       beforeNavLinks: ['/components/SidebarLogo#SidebarLogo'],
       graphics: {
         Logo: '/components/Logo#Logo',
         Icon: '/components/Icon#Icon',
       },
+      
       beforeDashboard: ['/components/BeforeDashboard#BeforeDashboard'],
     },
   },

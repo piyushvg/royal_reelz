@@ -287,3 +287,101 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
 .field-type .rs__indicator { padding: 0 8px; }
 .field-type .field-label { margin-bottom: 0.4rem; display: block; }
 .field-type .field-description { margin-top: 0.4rem; }
+
+/* =====================================================================
+   List view: search bar, Columns / Filters buttons, filter builder, pagination
+   ===================================================================== */
+.list-controls__wrap,
+[class*="list-controls__wrap"] {
+  display: flex; align-items: center; gap: 0.75rem; flex-wrap: nowrap;
+}
+.list-controls .search-filter,
+[class*="list-controls"] .search-filter { flex: 1 1 auto; min-width: 0; position: relative; }
+.list-controls__buttons,
+[class*="list-controls__buttons"] { display: flex; align-items: center; gap: 0.5rem; flex: none; margin: 0; }
+.list-controls__buttons-wrap,
+[class*="list-controls__buttons-wrap"] { display: flex; align-items: center; gap: 0.5rem; flex-wrap: nowrap; }
+
+/* Columns / Filters toggle buttons: same height, readable, clear spacing */
+.list-controls .pill,
+[class*="list-controls__toggle"] {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  height: 36px; padding: 0 14px; margin: 0;
+  background: #fff; color: var(--rr-maroon, #4a0a14);
+  border: 1px solid #d9cfcb; border-radius: 999px;
+  font-size: 13px; font-weight: 500; line-height: 1; white-space: nowrap; cursor: pointer;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+.list-controls .pill:hover,
+[class*="list-controls__toggle"]:hover { border-color: var(--rr-maroon, #4a0a14); }
+.list-controls .pill--is-active,
+.list-controls .pill[aria-expanded="true"],
+[class*="list-controls__toggle"][class*="--active"] {
+  background: var(--rr-maroon, #4a0a14); color: #fff; border-color: var(--rr-maroon, #4a0a14);
+}
+.list-controls .pill svg { flex: none; width: 12px; height: 12px; }
+
+/* column picker: neat wrapping chips */
+[class*="column-selector"] { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.75rem 0; }
+[class*="column-selector"] .pill { height: 32px; }
+
+/* filter builder: every condition is one aligned row */
+[class*="where-builder"] { padding: 1rem 0 0.5rem; }
+[class*="where-builder"] [class*="condition"] { align-items: center; }
+[class*="where-builder__or-filters"] { display: flex; flex-direction: column; gap: 0.75rem; }
+[class*="where-builder__and-filters"] { display: flex; flex-direction: column; gap: 0.5rem; }
+[class*="condition__wrap"], [class*="condition-wrap"] { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+[class*="condition__field"], [class*="condition__operator"], [class*="condition__value"] { min-width: 160px; flex: 1 1 160px; }
+[class*="where-builder"] .rs__control, [class*="where-builder"] input { min-height: 38px; box-sizing: border-box; }
+[class*="where-builder__add-or"], [class*="where-builder"] .btn { margin-top: 0.5rem; }
+
+/* search clear (x) button, added by AdminUiFixes */
+.search-filter .rr-search-clear {
+  position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+  width: 24px; height: 24px; padding: 0; display: none; align-items: center; justify-content: center;
+  border: 0; border-radius: 50%; background: transparent; color: #6b5b57; cursor: pointer;
+}
+.search-filter .rr-search-clear:hover { background: rgba(74, 10, 20, 0.1); color: var(--rr-maroon, #4a0a14); }
+.search-filter .rr-search-clear svg { width: 14px; height: 14px; pointer-events: none; }
+.search-filter .search-filter__input { padding-right: 38px; }
+
+/* pagination: page size sits on the right on every screen size */
+[class*="collection-list__page-controls"], [class*="page-controls"] {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem 1rem; width: 100%;
+}
+[class*="collection-list__page-info"], [class*="page-controls__page-info"] { margin-left: auto; text-align: right; }
+[class*="per-page"] { margin-left: auto; display: flex; align-items: center; justify-content: flex-end; text-align: right; }
+[class*="per-page"] .popup__content, [class*="per-page"] [class*="popup__content"] { right: 0; left: auto; }
+
+/* =====================================================================
+   Mobile (phones / small tablets)
+   ===================================================================== */
+@media (max-width: 768px) {
+  /* titles + action buttons wrap instead of overlapping */
+  .list-header__title-and-actions,
+  .doc-controls__wrapper { flex-wrap: wrap; align-items: flex-start; row-gap: 0.75rem; }
+  .list-header__actions, .list-header__title-actions,
+  .doc-controls__controls-wrapper { margin-left: 0; width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+  .doc-controls__controls { justify-content: flex-start; }
+  .doc-controls__meta, [class*="doc-controls__meta"] { flex-wrap: wrap; gap: 0.25rem 1rem; }
+
+  /* search bar full width, Columns / Filters on the next line */
+  .list-controls__wrap, [class*="list-controls__wrap"] { flex-wrap: wrap; }
+  .list-controls .search-filter, [class*="list-controls"] .search-filter { flex: 1 1 100%; width: 100%; }
+  .list-controls__buttons, [class*="list-controls__buttons"] { width: 100%; justify-content: flex-start; flex-wrap: wrap; }
+
+  /* tables scroll inside their own box */
+  .table-wrap, [class*="table-wrap"], .table { max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* form rows stack: one field per line */
+  .document-fields__edit .row, .document-fields__edit .field-type.row { flex-direction: column; align-items: stretch; row-gap: 0; }
+  .document-fields__edit .row > *, .document-fields__edit .field-type.row > * { width: 100% !important; flex: 1 1 100% !important; max-width: 100%; }
+  .document-fields__sidebar-fields, .document-fields__sidebar-wrap { width: 100%; max-width: 100%; }
+
+  /* long text never pushes the layout out */
+  .collection-edit, .collection-list, .template-default__wrap { min-width: 0; overflow-wrap: anywhere; }
+
+  /* page size + page numbers stay on the right */
+  [class*="collection-list__page-controls"], [class*="page-controls"] { justify-content: flex-end; }
+  [class*="collection-list__page-info"], [class*="per-page"] { margin-left: auto; width: auto; justify-content: flex-end; text-align: right; }
+}
