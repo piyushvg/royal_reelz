@@ -80,16 +80,28 @@
     if (!document.getElementById('rr-portal-icon-css')) {
       var st = document.createElement('style');
       st.id = 'rr-portal-icon-css';
-      st.textContent = '.site-nav a.nav-portal{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;' +
-        'padding:0;border:1px solid var(--gold,#c9a45c);border-radius:50%;line-height:0;transition:background .3s ease,color .3s ease}' +
-        '.site-nav a.nav-portal svg{width:16px;height:16px}.site-nav a.nav-portal:hover{background:var(--gold,#c9a45c)}' +
-        '.site-nav a.nav-portal::after{display:none!important}';
+      // Fixed box + explicit values (no inherited padding / line-height / font metrics),
+      // so the icon renders identically in Chrome, Edge, Firefox, Safari, Brave, Opera.
+      st.textContent =
+        '.site-header .site-nav a.nav-portal{' +
+        'box-sizing:border-box!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;' +
+        'flex:none!important;width:40px!important;height:40px!important;min-width:40px!important;min-height:40px!important;' +
+        'margin:0 0 0 0.5rem!important;padding:0!important;border:1px solid var(--gold,#c9a45c)!important;border-radius:50%!important;' +
+        'background:transparent!important;font-size:0!important;line-height:0!important;letter-spacing:0!important;text-indent:0!important;' +
+        'overflow:visible!important;vertical-align:middle;-webkit-appearance:none;appearance:none;' +
+        'transition:background-color .3s ease,color .3s ease,border-color .3s ease}' +
+        '.site-header .site-nav a.nav-portal::before,.site-header .site-nav a.nav-portal::after{display:none!important;content:none!important}' +
+        '.site-header .site-nav a.nav-portal svg{display:block!important;flex:none!important;width:18px!important;height:18px!important;' +
+        'margin:0!important;padding:0!important;overflow:visible;fill:none!important;stroke:currentColor!important;stroke-width:1.6;' +
+        'stroke-linecap:round;stroke-linejoin:round;color:inherit}' +
+        '.site-header .site-nav a.nav-portal:hover,.site-header .site-nav a.nav-portal:focus-visible{background:var(--gold,#c9a45c)!important;color:#2c0009!important}';
       document.head.appendChild(st);
     }
     a.classList.add('nav-portal');
     a.title = label;
     a.setAttribute('aria-label', label);
-    a.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
+    a.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" aria-hidden="true" focusable="false" shape-rendering="geometricPrecision">' +
+      '<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>';
   }
 
   // "Client Login" link header + footer menu me (CMS menu me na ho to bhi dikhe)
