@@ -39,7 +39,7 @@ export const Places: CollectionConfig = {
       label: 'Sub line',
       type: 'text',
       admin: {
-        description: 'Name ke neeche chhoti line, jaise country ka naam. Khaali bhi chhod sakte ho.',
+        description: 'Short line below the name, e.g. the country. Can be left empty.',
       },
     },
     {
@@ -48,7 +48,7 @@ export const Places: CollectionConfig = {
       type: 'array',
       labels: { singular: 'Location', plural: 'Locations' },
       admin: {
-        description: 'Venue / hotel list. Khaali chhodoge to sirf sub line dikhegi.',
+        description: 'Venue / hotel list. If left empty, only the sub line is shown.',
       },
       fields: [{ name: 'name', type: 'text', required: true }],
     },
