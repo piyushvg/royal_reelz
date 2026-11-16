@@ -1,4 +1,5 @@
 import { ImagePreviewCell as ImagePreviewCell_cb3865de0dfd74eb8a932524351aa8d1 } from '../../../components/ImagePreviewCell'
+import { MediaPreviewField as MediaPreviewField_a4bb84d8eb5ad9ad8c06478e50d602fb } from '../../../components/MediaPreviewField'
 import { FilePreviewField as FilePreviewField_3454e65f784ed6a61f64af00c9072919 } from '../../../components/FilePreviewField'
 import { FileLinkCell as FileLinkCell_dcad071ee3babf0be72d5e70cf3bcc86 } from '../../../components/FileLinkCell'
 import { Icon as Icon_a02a4abfb5c9da17149cbadc8057c129 } from '../../../components/Icon'
@@ -11,6 +12,7 @@ import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 /** @type import('payload').ImportMap */
 export const importMap = {
   "/components/ImagePreviewCell#ImagePreviewCell": ImagePreviewCell_cb3865de0dfd74eb8a932524351aa8d1,
+  "/components/MediaPreviewField#MediaPreviewField": MediaPreviewField_a4bb84d8eb5ad9ad8c06478e50d602fb,
   "/components/FilePreviewField#FilePreviewField": FilePreviewField_3454e65f784ed6a61f64af00c9072919,
   "/components/FileLinkCell#FileLinkCell": FileLinkCell_dcad071ee3babf0be72d5e70cf3bcc86,
   "/components/Icon#Icon": Icon_a02a4abfb5c9da17149cbadc8057c129,

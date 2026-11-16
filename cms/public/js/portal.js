@@ -365,6 +365,15 @@
   }
 
   var idForm = document.getElementById('otp-id-form');
+  // Mobile number: accepts +91 / spaces / dashes (and pasting), never blocks typing; an e-mail still works.
+  if (idForm && idForm.elements.identifier) {
+    idForm.elements.identifier.addEventListener('input', function () {
+      var v = this.value;
+      if (v.indexOf('@') > -1 || /[a-z]/i.test(v)) return;
+      var clean = v.replace(/[^\d+\s\-()]/g, '');
+      if (clean !== v) this.value = clean;
+    });
+  }
   if (idForm) idForm.addEventListener('submit', function (e) {
     e.preventDefault();
     var v = idForm.elements.identifier.value.trim();
