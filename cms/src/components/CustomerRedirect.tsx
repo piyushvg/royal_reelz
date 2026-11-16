@@ -67,5 +67,106 @@ export const CustomerRedirect: React.FC<{ children?: React.ReactNode }> = ({ chi
     }
   }, [])
 
+  // Layout helpers that do not depend on Payload's internal class names (they find elements by their text),
+  // so they behave the same in Chrome, Edge, Firefox and Safari.
+  useEffect(() => {
+    const URL_RE = /^https?:\/\/\S+$/i
+    const INFO_RE = /\d+\s*[-\u2013]\s*\d+\s+of\s+\d+/i
+
+    const childOf = (el: HTMLElement, wrap: HTMLElement) => {
+      let c: HTMLElement = el
+      while (c.parentElement && c.parentElement !== wrap) c = c.parentElement
+      return c
+    }
+
+    // 1) Pagination: page numbers left, "x-y of n" and "Per Page" together on the right, one row.
+    const fixPagination = () => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT)
+      let node: Node | null
+      while ((node = walker.nextNode())) {
+        if (!/^\s*Per Page/i.test(node.nodeValue || '')) continue
+        let per = node.parentElement as HTMLElement | null
+        const own = (node.nodeValue || '').trim().length
+        while (per && per.parentElement && (per.parentElement.textContent || '').trim().length <= own + 4) per = per.parentElement
+        if (!per) continue
+        let wrap = per.parentElement as HTMLElement | null
+        let guard = 0
+        while (wrap && guard++ < 6 && !INFO_RE.test(wrap.textContent || '') && !wrap.querySelector('[class*="paginator"]')) wrap = wrap.parentElement
+        if (!wrap || wrap === document.body || wrap.dataset.rrPg === '1') continue
+        wrap.dataset.rrPg = '1'
+        Object.assign(wrap.style, {
+          display: 'flex', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between',
+          columnGap: '1.5rem', rowGap: '0.5rem', width: '100%',
+        })
+        const perChild = childOf(per, wrap)
+        Array.from(wrap.children).forEach((c) => {
+          const el = c as HTMLElement
+          if (el === perChild) {
+            el.style.marginLeft = INFO_RE.test(wrap!.textContent || '') && wrap!.children.length > 2 ? '0' : 'auto'
+            el.style.whiteSpace = 'nowrap'
+          } else if (INFO_RE.test(el.textContent || '')) {
+            el.style.marginLeft = 'auto'
+            el.style.whiteSpace = 'nowrap'
+          }
+        })
+      }
+    }
+
+    // 2) Links: any URL shown in a list cell or typed in a text field gets a clear "Open" link (new tab).
+    const mkLink = (href: string) => {
+      const a = document.createElement('a')
+      a.className = 'rr-open-link'
+      a.href = href
+      a.target = '_blank'
+      a.rel = 'noopener noreferrer'
+      a.textContent = 'Open link \u2197'
+      return a
+    }
+    const linkify = () => {
+      document.querySelectorAll<HTMLElement>('td').forEach((td) => {
+        const t = (td.textContent || '').trim()
+        const has = td.querySelector('a.rr-open-link')
+        if (URL_RE.test(t.replace(/\s*Open link.*$/, ''))) {
+          const url = t.replace(/\s*Open link.*$/, '')
+          if (!has && !td.querySelector('a')) td.appendChild(mkLink(url))
+        } else if (has) has.remove()
+      })
+      document.querySelectorAll<HTMLInputElement>('.document-fields input[type="text"], form input[type="text"]').forEach((inp) => {
+        const box = (inp.closest('.field-type') as HTMLElement | null) || inp.parentElement
+        if (!box) return
+        const v = (inp.value || '').trim()
+        const has = box.querySelector(':scope > a.rr-open-link') as HTMLAnchorElement | null
+        if (URL_RE.test(v)) {
+          if (has) has.href = v
+          else box.appendChild(mkLink(v))
+        } else if (has) has.remove()
+      })
+    }
+
+    let queued = false
+    const run = () => {
+      queued = false
+      try {
+        fixPagination()
+        linkify()
+      } catch {
+        /* never break the admin because of a cosmetic helper */
+      }
+    }
+    const schedule = () => {
+      if (queued) return
+      queued = true
+      window.setTimeout(run, 150)
+    }
+    run()
+    const mo = new MutationObserver(schedule)
+    mo.observe(document.body, { childList: true, subtree: true })
+    document.addEventListener('input', schedule, true)
+    return () => {
+      mo.disconnect()
+      document.removeEventListener('input', schedule, true)
+    }
+  }, [])
+
   return <>{children}</>
 }

@@ -10,7 +10,7 @@ export const Photos: CollectionConfig = {
   admin: {
     preview: () => siteURL('gallery.html'),
     useAsTitle: 'alt',
-    defaultColumns: ['image', 'alt', 'order'],
+    defaultColumns: ['image', 'alt', 'order', 'updatedAt'],
     group: 'Gallery',
   },
   access: {
@@ -19,7 +19,9 @@ export const Photos: CollectionConfig = {
     update: isLoggedIn,
     delete: isLoggedIn,
   },
-  defaultSort: 'order',
+  // Order first; photos with the same order stay in a stable sequence (oldest first),
+  // so ascending / descending never shuffles ties.
+  defaultSort: ['order', 'createdAt'],
   fields: [
     ...uploadOrPath('image', 'Photo'),
     { name: 'alt', label: 'Description', type: 'text', required: true },

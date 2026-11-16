@@ -47,3 +47,10 @@ export const orderField: Field = {
     description: 'Lower numbers appear first on the website.',
   },
 }
+
+/** Added to every form: it keeps the "Leave without saving?" message away until the user has really edited something. */
+export const pristineGuardField: Field = {
+  name: 'pristineGuard',
+  type: 'ui',
+  admin: { components: { Field: '/components/FormPristine#FormPristine' } },
+}

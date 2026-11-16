@@ -10,7 +10,7 @@ export const Enquiries: CollectionConfig = {
     defaultColumns: ['name', 'email', 'phone', 'weddingDate', 'status', 'createdAt'],
     listSearchableFields: ['name', 'email', 'phone'],
     group: 'Contact',
-    description: 'Contact form fill karne wale yahan list mein dikhte hain. Website form is collection mein save hoti hai.',
+    description: 'Contact form submissions are saved in this collection and listed here.',
   },
   access: {
     read: isLoggedIn,

@@ -18,6 +18,7 @@ import { Slides } from './collections/Slides'
 import { Team } from './collections/Team'
 import { Users } from './collections/Users'
 import { Videos } from './collections/Videos'
+import { pristineGuardField } from './fields'
 import { ensureLiveSchema } from './ensureLiveSchema'
 import { enquiryEndpoint } from './endpoints/enquiry'
 import { frontendEndpoint } from './endpoints/frontend'
@@ -32,6 +33,9 @@ import { seedIfEmpty } from './seed'
 
 const filename = fileURLToPath(import.meta.url)
 const dirname = path.dirname(filename)
+
+// Adds the unsaved-changes guard to a collection / global form.
+const withGuard = <T extends { fields: any[] }>(config: T): T => ({ ...config, fields: [...config.fields, pristineGuardField] })
 
 export default buildConfig({
   admin: {
@@ -62,8 +66,8 @@ export default buildConfig({
       beforeDashboard: ['/components/BeforeDashboard#BeforeDashboard'],
     },
   },
-  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries, CustomerFiles, LoginOtps],
-  globals: [Site, About, Destinations, Gallery, Contact],
+  collections: [Users, Media, Slides, Awards, Press, Places, Photos, Services, Team, Videos, Enquiries, CustomerFiles, LoginOtps].map(withGuard),
+  globals: [Site, About, Destinations, Gallery, Contact].map(withGuard),
   endpoints: [frontendEndpoint, enquiryEndpoint, otpRequestEndpoint, otpVerifyEndpoint],
   editor: lexicalEditor(),
   secret: process.env.PAYLOAD_SECRET || '',
