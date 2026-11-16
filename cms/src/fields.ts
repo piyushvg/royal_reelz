@@ -14,6 +14,19 @@ export function uploadOrPath(name: string, label: string, pathName?: string): Fi
         },
       },
     },
+    // Shows the chosen image in the edit form, with a link to open it full size in a new tab
+    {
+      name: `${name}Preview`,
+      type: 'ui',
+      admin: {
+        components: {
+          Field: {
+            path: '/components/MediaPreviewField#MediaPreviewField',
+            clientProps: { source: name },
+          },
+        },
+      },
+    },
     {
       name: pathName || `${name}Path`,
       label: `${label} path`,
