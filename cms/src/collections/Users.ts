@@ -14,9 +14,15 @@ const notSuper: Where = { email: { not_equals: SUPER_EMAIL } }
 /** mobile number -> last 10 digits only */
 const normalizePhone = (v: unknown) => String(v ?? '').replace(/\D/g, '').slice(-10)
 
+/** Date-only fields are stored at 12:00 UTC. That is the value the admin date picker itself produces,
+ *  so opening a form never marks it as "changed" (no unexpected "Leave without saving" message). */
+function atNoon(from: Date) {
+  return new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate(), 12, 0, 0, 0))
+}
+
 function addOneYear(from: Date) {
-  const d = new Date(from.getTime())
-  d.setFullYear(d.getFullYear() + 1)
+  const d = atNoon(from)
+  d.setUTCFullYear(d.getUTCFullYear() + 1)
   return d
 }
 
@@ -141,7 +147,7 @@ export const Users: CollectionConfig = {
         if (role === 'customer') {
           // New customer => 1-year subscription starting today
           if (operation === 'create') {
-            if (!d.subscriptionStart) d.subscriptionStart = now.toISOString()
+            if (!d.subscriptionStart) d.subscriptionStart = atNoon(now).toISOString()
             if (!d.subscriptionEnd) d.subscriptionEnd = addOneYear(new Date(d.subscriptionStart)).toISOString()
           }
           // "Renew for 1 year" ticked and saved => +1 year from the current end date (or from today, whichever is later)
@@ -149,7 +155,7 @@ export const Users: CollectionConfig = {
             const current = new Date(d.subscriptionEnd ?? prev.subscriptionEnd ?? 0)
             const base = current.getTime() > now.getTime() ? current : now
             d.subscriptionEnd = addOneYear(base).toISOString()
-            if (!d.subscriptionStart && !prev.subscriptionStart) d.subscriptionStart = now.toISOString()
+            if (!d.subscriptionStart && !prev.subscriptionStart) d.subscriptionStart = atNoon(now).toISOString()
           }
         }
         d.renewOneYear = false // always reset the checkbox
@@ -222,7 +228,7 @@ export const Users: CollectionConfig = {
           name: 'subscriptionStart',
           type: 'date',
           label: 'Subscription start',
-          defaultValue: () => new Date().toISOString(), // pre-filled with today on the create form
+          defaultValue: () => atNoon(new Date()).toISOString(), // pre-filled with today on the create form
           access: { create: staffOnly, update: staffOnly },
           admin: { date: { pickerAppearance: 'dayOnly', displayFormat: 'dd MMM yyyy' } },
         },
