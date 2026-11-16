@@ -419,9 +419,42 @@
         (v.caption ? '<p class="video-cap">' + esc(v.caption) + '</p>' : '') +
         '<div class="video-meta">' +
         '<h2 class="video-title">' + esc(v.title) + '</h2>' +
+        '<a class="video-open" href="https://www.youtube.com/watch?v=' + esc(id) + '" target="_blank" rel="noopener">Watch on YouTube &#8599;</a>' +
         '<button class="video-sound" type="button" aria-label="Sound on" title="Sound on/off"><svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>' +
         '</div></article>';
     });
+
+    videoFallback(grid);
+  }
+
+  // If the embedded player cannot start (Firefox tracking protection, blockers, slow network),
+  // show the thumbnail with a play button that opens the video directly on YouTube.
+  function videoFallback(grid) {
+    if (!document.getElementById('rr-video-css')) {
+      var st = document.createElement('style');
+      st.id = 'rr-video-css';
+      st.textContent =
+        '.video-open{margin-left:auto;margin-right:1rem;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;' +
+        'color:var(--primary,#4a0a14);text-decoration:none;border-bottom:1px solid var(--gold,#c9a45c);white-space:nowrap}' +
+        '.video-open:hover{color:var(--gold,#c9a45c)}' +
+        '.video-fallback{position:absolute;inset:0;display:block;background:#1c0006}' +
+        '.video-fallback img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}' +
+        '.video-fallback span{position:absolute;left:50%;top:50%;width:68px;height:68px;margin:-34px 0 0 -34px;border-radius:50%;' +
+        'background:rgba(44,0,9,.78);border:1px solid var(--gold,#c9a45c)}' +
+        '.video-fallback span::after{content:"";position:absolute;left:27px;top:21px;border-style:solid;border-width:13px 0 13px 20px;' +
+        'border-color:transparent transparent transparent var(--gold,#c9a45c)}';
+      document.head.appendChild(st);
+    }
+    setTimeout(function () {
+      Array.prototype.forEach.call(grid.querySelectorAll('.video-frame[data-yt]'), function (frame) {
+        if (frame.querySelector('iframe')) return;
+        var id = frame.getAttribute('data-yt');
+        frame.style.position = 'relative';
+        frame.innerHTML = '<a class="video-fallback" href="https://www.youtube.com/watch?v=' + esc(id) +
+          '" target="_blank" rel="noopener" aria-label="Play video on YouTube">' +
+          '<img src="https://i.ytimg.com/vi/' + esc(id) + '/hqdefault.jpg" alt="" loading="lazy"><span></span></a>';
+      });
+    }, 4500);
   }
 
   /* ------------------------------------------------- contact page */
