@@ -22,7 +22,7 @@ export function uploadOrPath(name: string, label: string, pathName?: string): Fi
         components: {
           Field: {
             path: '/components/MediaPreviewField#MediaPreviewField',
-            clientProps: { source: name },
+            clientProps: { source: name, pathField: pathName || `${name}Path` },
           },
         },
       },

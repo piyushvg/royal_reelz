@@ -29,7 +29,8 @@ const local = (u?: string) => {
 }
 
 /** Edit form: preview of the selected image + "View full image" link (opens in a new tab). */
-export const MediaPreviewField: React.FC<{ source?: string }> = ({ source }) => {
+export const MediaPreviewField: React.FC<{ source?: string; pathField?: string }> = ({ source, pathField }) => {
+  const pathValue = useFormFields(([fields]) => (pathField ? (fields as any)?.[pathField]?.value : undefined)) as string | null | undefined
   const value = useFormFields(([fields]) => (source ? (fields as any)?.[source]?.value : undefined)) as
     | string
     | number
@@ -61,7 +62,9 @@ export const MediaPreviewField: React.FC<{ source?: string }> = ({ source }) => 
     }
   }, [value])
 
-  const url = local(media?.url)
+  const p = typeof pathValue === 'string' ? pathValue.trim() : ''
+  const fromPath = p ? (/^(https?:)?\/\//.test(p) || p.startsWith('/') ? p : `/${p}`) : ''
+  const url = local(media?.url) || fromPath
   if (!url) return null
   const thumb = local(media?.thumbnailURL) || url
 

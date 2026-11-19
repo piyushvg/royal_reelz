@@ -426,3 +426,19 @@ button.btn--style-primary .btn__content, button.btn--style-primary .btn__label {
 }
 .rr-open-link:hover { background: var(--rr-maroon, #4a0a14); color: #fff !important; }
 .field-type > a.rr-open-link { display: inline-block; margin: 0.4rem 0 0; }
+
+/* Page Size: always the far right (beats earlier margin rules, incl. on phones) */
+[class*="collection-list__page-controls"], [class*="page-controls"] { flex-direction: row !important; flex-wrap: wrap !important; }
+[class*="page-controls"] > [class*="paginator"] { flex: 1 1 100% !important; margin: 0 !important; }
+[class*="collection-list__page-info"], [class*="page-controls__page-info"] {
+  margin: 0 0 0 auto !important; flex: 0 0 auto !important; width: auto !important; white-space: nowrap !important; text-align: right !important;
+}
+[class*="per-page"] {
+  margin: 0 0 0 1rem !important; flex: 0 0 auto !important; width: auto !important; white-space: nowrap !important;
+  justify-content: flex-end !important; text-align: right !important;
+}
+@media (max-width: 768px) {
+  [class*="collection-list__page-controls"], [class*="page-controls"] { justify-content: flex-end !important; }
+  [class*="collection-list__page-info"], [class*="page-controls__page-info"] { margin-left: auto !important; }
+  [class*="per-page"] { margin-left: 1rem !important; }
+}
