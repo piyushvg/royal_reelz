@@ -99,16 +99,22 @@ export const CustomerRedirect: React.FC<{ children?: React.ReactNode }> = ({ chi
           columnGap: '1.5rem', rowGap: '0.5rem', width: '100%',
         })
         const perChild = childOf(per, wrap)
+        const imp = (el: HTMLElement, k: string, v: string) => el.style.setProperty(k, v, 'important')
+        imp(wrap, 'flex-direction', 'row')
         Array.from(wrap.children).forEach((c) => {
           const el = c as HTMLElement
-          if (el === perChild) {
-            el.style.marginLeft = INFO_RE.test(wrap!.textContent || '') && wrap!.children.length > 2 ? '0' : 'auto'
-            el.style.whiteSpace = 'nowrap'
-          } else if (INFO_RE.test(el.textContent || '')) {
-            el.style.marginLeft = 'auto'
-            el.style.whiteSpace = 'nowrap'
+          const isInfo = el !== perChild && INFO_RE.test(el.textContent || '') && !el.querySelector('[class*="paginator"]')
+          if (el === perChild || isInfo) {
+            imp(el, 'flex', '0 0 auto')
+            imp(el, 'width', 'auto')
+            imp(el, 'white-space', 'nowrap')
+            imp(el, 'text-align', 'right')
+            imp(el, 'margin-left', isInfo ? 'auto' : '1rem')
           }
         })
+        imp(wrap, 'justify-content', 'flex-end')
+        const pager = wrap.querySelector('[class*="paginator"]') as HTMLElement | null
+        if (pager) imp(childOf(pager, wrap), 'flex', '1 1 100%')
       }
     }
 
