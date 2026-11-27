@@ -182,25 +182,29 @@
       '</figcaption></figure>';
   }
 
+  var SOUND_BTN = '<button class="video-sound" type="button" aria-label="Sound on" title="Sound on/off">' +
+    '<svg class="ico-off" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/>' +
+    '<path d="M16 9.5l5 5M21 9.5l-5 5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>' +
+    '<svg class="ico-on" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5v5h3.5L12 18.5v-13L7.5 9.5H4z" fill="currentColor"/>' +
+    '<path d="M15.5 9a4.2 4.2 0 0 1 0 6M18 6.5a7.8 7.8 0 0 1 0 11" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg></button>';
+
   function videoCard(f) {
-    var media;
     var mime = f.mimeType || '';
-    if (mime.indexOf('video/') === 0 && f.filename) {
-      media = '<video controls playsinline preload="metadata" src="' + esc(fileSrc(f)) + '"></video>';
-    } else if (youtubeId(f.videoUrl)) {
-      // thumbnail + play button: one click opens the video directly on YouTube
-      media = '<a class="portal-play" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener" aria-label="Play ' + esc(f.title) + '">' +
-        '<img src="https://i.ytimg.com/vi/' + esc(youtubeId(f.videoUrl)) + '/hqdefault.jpg" alt="' + esc(f.title) + '" loading="lazy">' +
-        '<span class="portal-play-btn" aria-hidden="true"></span></a>';
-    } else {
-      media = '<a class="portal-ext portal-play" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">' +
-        '<span class="portal-play-btn" aria-hidden="true"></span><span class="portal-ext-t">Watch video</span></a>';
-    }
-    return '<article class="portal-video">' +
-      '<div class="portal-frame">' + media + '</div>' +
-      '<div class="portal-meta"><h3>' + esc(f.title) + '</h3>' +
-        (f.videoUrl ? '<a class="portal-dl" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Open</a>' : dlLink(f)) + '</div>' +
-      (f.note ? '<p class="portal-note">' + esc(f.note) + '</p>' : '') + '</article>';
+    var yt = youtubeId(f.videoUrl);
+    var file = mime.indexOf('video/') === 0 && f.filename;
+    var frame;
+    if (file) frame = '<div class="video-frame" data-file="' + esc(fileSrc(f)) + '"></div>';
+    else if (yt) frame = '<div class="video-frame" data-yt="' + esc(yt) + '"></div>';
+    else if (f.videoUrl) frame = '<a class="video-frame portal-ext" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Watch video</a>';
+    else frame = '<div class="video-frame"></div>';
+
+    var link = f.videoUrl
+      ? '<a class="portal-dl" href="' + esc(f.videoUrl) + '" target="_blank" rel="noopener">Open</a>'
+      : dlLink(f);
+    return '<article class="video-card">' + frame +
+      '<div class="video-meta"><h2 class="video-title">' + esc(f.title) + '</h2>' +
+      '<div class="portal-meta-actions">' + link + (file || yt ? SOUND_BTN : '') + '</div></div>' +
+      (f.note ? '<p class="video-cap">' + esc(f.note) + '</p>' : '') + '</article>';
   }
 
   function render() {
@@ -220,14 +224,14 @@
 
     // jis tab me kuch hai wahi pehle dikhao
     selectTab(state.photos.length || !state.videos.length ? 'photos' : 'videos');
+    if (window.RR && typeof window.RR.initVideos === 'function') window.RR.initVideos();
   }
 
   function selectTab(name) {
     $$('.portal-tab').forEach(function (b) { b.classList.toggle('is-on', b.getAttribute('data-tab') === name); });
     $$('.portal-panel').forEach(function (p) { p.classList.toggle('is-on', p.id === 'panel-' + name); });
-    // doosre tab ki videos band karo
-    if (name !== 'videos') {
-      $$('#grid-videos video').forEach(function (v) { try { v.pause(); } catch (e) {} });
+    if (name !== 'videos' && window.RR && typeof window.RR.pauseVideos === 'function') {
+      window.RR.pauseVideos();
     }
   }
 

@@ -30,6 +30,19 @@ function mediaFileOnDisk(url: string) {
   return existsSync(path.join(process.cwd(), 'media', filename))
 }
 
+/** Stock script wordmarks. The site shows the admin badge instead of these. */
+const STOCK_WORDMARKS = new Set([
+  '/images/logo-white.png',
+  '/images/logo-ink.png',
+  '/images/logo-source.png',
+])
+
+export function brandLogo(file: UploadValue, fallback?: string | null): string {
+  const src = mediaSrc(file, fallback)
+  if (!src || STOCK_WORDMARKS.has(src)) return '/admin-logo.png'
+  return src
+}
+
 export function mediaSrc(file: UploadValue, fallback?: string | null): string {
   const uploaded = file && typeof file === 'object' && file.url ? publicURL(file.url) : ''
   const pathFallback = fallback ? publicURL(fallback) : ''
@@ -98,8 +111,8 @@ export const frontendEndpoint: Endpoint = {
         title: site.title,
         loaderKicker: site.loaderKicker,
         favicon: mediaSrc((site as any).favicon, (site as any).faviconPath),
-        logoWhite: mediaSrc(site.logoWhite, site.logoWhitePath),
-        logoInk: mediaSrc(site.logoInk, site.logoInkPath),
+        logoWhite: brandLogo(site.logoWhite, site.logoWhitePath),
+        logoInk: brandLogo(site.logoInk, site.logoInkPath),
         edition: site.edition,
         scrollHint: site.scrollHint,
         footer: site.footer,

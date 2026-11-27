@@ -109,7 +109,8 @@ ul {
 }
 
 .loader-logo {
-  width: min(260px, 66vw);
+  width: min(150px, 42vw);
+  height: auto;
 }
 
 .loader-rule {
@@ -160,8 +161,9 @@ ul {
 }
 
 .logo {
-  height: 36px;
+  height: 52px;
   width: auto;
+  object-fit: contain;
 }
 
 .logo-light {
@@ -1277,8 +1279,9 @@ ul {
 }
 
 .foot-logo {
-  height: 40px;
+  height: 64px;
   width: auto;
+  object-fit: contain;
 }
 
 .brand-sub {
@@ -1723,7 +1726,7 @@ ul {
 
 @media (max-width: 560px) {
   .logo {
-    height: 28px;
+    height: 42px;
   }
 
   .sheet-frame {
@@ -2019,7 +2022,7 @@ ul {
 }
 
 .foot-logo {
-  height: 34px;
+  height: 56px;
 }
 
 .foot-mid {
