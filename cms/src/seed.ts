@@ -141,8 +141,8 @@ export async function seedIfEmpty(payload: Payload) {
     data: {
       title: 'Royal Reelz — Luxury Wedding Films & Photography',
       loaderKicker: 'A celebration of love',
-      logoWhitePath: 'images/logo-white.png',
-      logoInkPath: 'images/logo-ink.png',
+      logoWhitePath: 'admin-logo.png',
+      logoInkPath: 'admin-logo.png',
       edition: '2026 Edition',
       scrollHint: 'Discover',
       footer: '\u00a9 Royal Reelz. All rights reserved.',

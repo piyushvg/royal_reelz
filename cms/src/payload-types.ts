@@ -299,11 +299,11 @@ export interface Place {
    */
   iconPath?: string | null;
   /**
-   * Name ke neeche chhoti line, jaise country ka naam. Khaali bhi chhod sakte ho.
+   * Short line below the name, e.g. the country. Can be left empty.
    */
   location?: string | null;
   /**
-   * Venue / hotel list. Khaali chhodoge to sirf sub line dikhegi.
+   * Venue / hotel list. If left empty, only the sub line is shown.
    */
   venues?:
     | {
@@ -410,7 +410,7 @@ export interface Video {
   createdAt: string;
 }
 /**
- * Contact form fill karne wale yahan list mein dikhte hain. Website form is collection mein save hoti hai.
+ * Contact form submissions are saved in this collection and listed here.
  *
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "enquiries".
